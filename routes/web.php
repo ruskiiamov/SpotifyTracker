@@ -20,4 +20,17 @@ Route::get('/', [HomeController::class, 'index'])
     ->name('index');
 
 Route::get('/login', [AuthController::class, 'login'])
+    ->middleware('guest')
     ->name('login');
+
+Route::get('/logout', [AuthController::class, 'logout'])
+    ->middleware('auth')
+    ->name('logout');
+
+Route::post('/login', [AuthController::class, 'loginSpotify'])
+    ->middleware('guest')
+    ->name('loginSpotify');
+
+Route::get('/callback', [AuthController::class, 'callback'])
+    ->middleware('guest')
+    ->name('callback');

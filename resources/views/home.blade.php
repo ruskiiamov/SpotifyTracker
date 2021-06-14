@@ -6,6 +6,7 @@
     </x-slot>
 
     <div>
-        <p>Please choose the tracking mode:</p>
+        <a href="{{ route('logout') }}">Logout</a><br>
+        <p>Hello {{ \Illuminate\Support\Facades\Auth::user()->name }}. Please choose the tracking mode:</p>
     </div>
 </x-layout>
