@@ -4,12 +4,16 @@
 namespace App\Services;
 
 
+use Illuminate\Support\Facades\Auth;
+
 class Spotify
 {
+
     private $authUrl = 'https://accounts.spotify.com/authorize';
     private $tokenUrl = 'https://accounts.spotify.com/api/token';
     private $apiUrl = 'https://api.spotify.com/v1';
     private $scope = 'user-read-email user-read-private user-follow-read';
+
 
     public function getAuthUrl()
     {
@@ -25,12 +29,14 @@ class Spotify
         return $url;
     }
 
+
     private function createState()
     {
         $state = uniqid(rand(), true);
         session(['state' => $state]);
         return $state;
     }
+
 
     public function getAccessToken($code)
     {
@@ -42,9 +48,33 @@ class Spotify
             'client_secret' => env('SPOTIFY_CLIENT_SECRET'),
         ];
 
-        return $this->request('POST', $this->tokenUrl, $parameters);
+        $result = $this->request('POST', $this->tokenUrl, $parameters);
+
+        $this->saveAccessToken($result->access_token, $result->expires_in);
+
+        return $result;
 
     }
+
+
+    public function getRefreshedAccessToken($refreshToken)
+    {
+        $parameters = [
+            'grant_type' => 'refresh_token',
+            'refresh_token' => $refreshToken,
+        ];
+
+        $base64 = base64_encode(env('SPOTIFY_CLIENT_ID') . ':' . env('SPOTIFY_CLIENT_SECRET'));
+
+        $headers = ['Authorization' => 'Basic ' . $base64];
+
+        $result = $this->request('POST', $this->tokenUrl, $parameters, $headers);
+
+        $this->saveAccessToken($result->access_token, $result->expires_in);
+
+        return $result;
+    }
+
 
     public function getUserData($accessToken)
     {
@@ -52,12 +82,12 @@ class Spotify
         return $this->request('GET', $this->apiUrl . '/me', [], $headers);
     }
 
+
     private function request($method, $url, $parameters = [], $headers = [])
     {
         $parameters = http_build_query($parameters, '', '&');
 
         $options = [
-            CURLOPT_URL => $url,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER => [],
         ];
@@ -66,7 +96,12 @@ class Spotify
             $options[CURLOPT_HTTPHEADER][] = "{$key}: {$val}";
         }
 
+        if ($method == 'GET') {
+            $options[CURLOPT_URL] = $url . $parameters;
+        }
+
         if ($method == 'POST') {
+            $options[CURLOPT_URL] = $url;
             $options[CURLOPT_POST] = true;
             $options[CURLOPT_POSTFIELDS] = $parameters;
         }
@@ -77,5 +112,49 @@ class Spotify
         curl_close($ch);
 
         return $response;
+    }
+
+    private function saveAccessToken($accessToken, $expires_in)
+    {
+        session([
+            'access_token' => $accessToken,
+            'expiring_time' => time() + (int) (0.99 * $expires_in),
+        ]);
+    }
+
+
+    public function isFreshAccessToken()
+    {
+        return time() < session('expiring_time');
+    }
+
+
+    public function getFollowedArtists($accessToken, $after = null)
+    {
+        $parameters = [
+            'type' => 'artist',
+            'limit' => '50',
+        ];
+
+        if ($after) {
+            $parameters['after'] = $after;
+        }
+
+        $headers = ['Authorization' => 'Bearer ' . $accessToken];
+
+        return $this->request('GET', $this->apiUrl . '/me/following?', $parameters, $headers);
+    }
+
+    public function getLastArtistAlbum($accessToken, $artistId)
+    {
+        $parameters = [
+            'include_groups' => 'album',
+            'market' => Auth::user()->country,
+            'limit' => 1,
+        ];
+
+        $headers = ['Authorization' => 'Bearer ' . $accessToken];
+
+        return $this->request('GET', $this->apiUrl . "/artists/{$artistId}/albums?", $parameters, $headers);
     }
 }

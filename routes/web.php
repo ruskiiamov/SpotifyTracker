@@ -34,3 +34,11 @@ Route::post('/login', [AuthController::class, 'loginSpotify'])
 Route::get('/callback', [AuthController::class, 'callback'])
     ->middleware('guest')
     ->name('callback');
+
+Route::get('/followed', [HomeController::class, 'followed'])
+    ->middleware('auth')
+    ->name('followed');
+
+Route::get('/genres', [HomeController::class, 'genres'])
+    ->middleware('auth')
+    ->name('genres');

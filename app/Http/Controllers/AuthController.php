@@ -32,9 +32,7 @@ class AuthController extends Controller
         $code = $request->get('code');
 
         $result = Spotify::getAccessToken($code);
-        $accessToken = $result->access_token;
-
-        $userData = Spotify::getUserData($accessToken);
+        $userData = Spotify::getUserData($result->access_token);
 
         $email = $userData->email;
         $user = User::where('email', $email)->first();
