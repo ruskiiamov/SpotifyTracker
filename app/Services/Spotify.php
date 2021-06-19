@@ -72,7 +72,7 @@ class Spotify
 
         $this->saveAccessToken($result->access_token, $result->expires_in);
 
-        return $result;
+        return $result->access_token;
     }
 
 

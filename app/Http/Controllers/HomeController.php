@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Facades\Spotify;
+use App\Models\Following;
+use App\Services\Tasks;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -56,6 +58,14 @@ class HomeController extends Controller
 
         dump($timemark2 - $timemark1);
         dump($timemark3 - $timemark2);
+
+        die();
+    }
+
+    public function genres()
+    {
+        $task = new Tasks();
+        $res = $task->updateFollowedArtists();
 
         die();
     }

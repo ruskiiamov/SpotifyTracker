@@ -33,12 +33,14 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-    /**
-     * The attributes that should be cast to native types.
-     *
-     * @var array
-     */
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-    ];
+    public function artists()
+    {
+        return $this->belongsToMany(Artist::class, 'followings');
+    }
+
+    public function followings()
+    {
+        return $this->hasMany(Following::class);
+    }
+
 }
