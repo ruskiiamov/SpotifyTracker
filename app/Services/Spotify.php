@@ -12,7 +12,7 @@ class Spotify
     private $authUrl = 'https://accounts.spotify.com/authorize';
     private $tokenUrl = 'https://accounts.spotify.com/api/token';
     private $apiUrl = 'https://api.spotify.com/v1';
-    private $scope = 'user-read-email user-read-private user-follow-read';
+    private $scope = 'user-read-email user-read-private user-follow-read user-library-read';
 
 
     public function getAuthUrl()
@@ -145,16 +145,56 @@ class Spotify
         return $this->request('GET', $this->apiUrl . '/me/following?', $parameters, $headers);
     }
 
+    public function getSavedAlbums($accessToken, $offset = null)
+    {
+        $parameters = [
+            'limit' => '50',
+        ];
+
+        if ($offset) {
+            $parameters['offset'] = $offset;
+        }
+
+        $headers = ['Authorization' => 'Bearer ' . $accessToken];
+
+        return $this->request('GET', $this->apiUrl . '/me/albums?', $parameters, $headers);
+    }
+
     public function getLastArtistAlbum($accessToken, $artistId)
     {
         $parameters = [
             'include_groups' => 'album',
-            'market' => Auth::user()->country,
             'limit' => 1,
         ];
 
         $headers = ['Authorization' => 'Bearer ' . $accessToken];
 
         return $this->request('GET', $this->apiUrl . "/artists/{$artistId}/albums?", $parameters, $headers);
+    }
+
+    public function getArtistAlbums($accessToken, $artistId)
+    {
+        $parameters = [
+            'include_groups' => 'album',
+        ];
+
+        $headers = ['Authorization' => 'Bearer ' . $accessToken];
+
+        return $this->request('GET', $this->apiUrl . "/artists/{$artistId}/albums?", $parameters, $headers);
+    }
+
+    public function getAlbum($accessToken, $albumId)
+    {
+        $headers = ['Authorization' => 'Bearer ' . $accessToken];
+
+        return $this->request('GET', $this->apiUrl . "/albums/{$albumId}", [], $headers);
+
+    }
+
+    public function getArtist($accessToken, $artistId)
+    {
+        $headers = ['Authorization' => 'Bearer ' . $accessToken];
+
+        return $this->request('GET', $this->apiUrl . "/artists/{$artistId}?", [], $headers);
     }
 }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
@@ -42,3 +43,8 @@ Route::get('/followed', [HomeController::class, 'followed'])
 Route::get('/genres', [HomeController::class, 'genres'])
     ->middleware('auth')
     ->name('genres');
+
+Route::get('/admin/artists', [AdminController::class, 'updateFollowedArtists'])
+    ->name('admin::artists');
+Route::get('/admin/albums', [AdminController::class, 'updateAlbumList'])
+    ->name('admin::albums');

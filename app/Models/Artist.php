@@ -18,4 +18,19 @@ class Artist extends Model
     {
         return $this->hasMany(Following::class);
     }
+
+    public function albums()
+    {
+        return $this->hasMany(Album::class);
+    }
+
+    public function genres()
+    {
+        return $this->belongsToMany(Genre::class, 'connections');
+    }
+
+    public function connections()
+    {
+        return $this->hasMany(Connection::class);
+    }
 }

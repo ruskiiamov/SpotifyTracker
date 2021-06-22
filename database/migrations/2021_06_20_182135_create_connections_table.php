@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateAlbumsTable extends Migration
+class CreateConnectionsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,15 +13,10 @@ class CreateAlbumsTable extends Migration
      */
     public function up()
     {
-        Schema::create('albums', function (Blueprint $table) {
+        Schema::create('connections', function (Blueprint $table) {
             $table->id();
-            $table->string('spotify_id')->unique();
-            $table->string('name');
-            $table->date('release_date');
             $table->foreignId('artist_id')->constrained('artists');
-            $table->json('markets');
-            $table->string('image');
-            $table->integer('popularity');
+            $table->foreignId('genre_id')->constrained('genres');
             $table->timestamps();
         });
     }
@@ -33,6 +28,6 @@ class CreateAlbumsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('albums');
+        Schema::dropIfExists('connections');
     }
 }
