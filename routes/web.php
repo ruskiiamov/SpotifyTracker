@@ -48,3 +48,5 @@ Route::get('/admin/artists', [AdminController::class, 'updateFollowedArtists'])
     ->name('admin::artists');
 Route::get('/admin/albums', [AdminController::class, 'updateAlbumList'])
     ->name('admin::albums');
+Route::get('/admin/genres-analyse', [AdminController::class, 'genresAnalyse'])
+    ->name('admin::genres-analyse');

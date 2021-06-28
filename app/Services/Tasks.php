@@ -6,15 +6,25 @@ namespace App\Services;
 
 use App\Models\Album;
 use App\Models\Artist;
+use App\Models\Categorie;
 use App\Models\Connection;
 use App\Models\Following;
 use App\Models\Genre;
 use App\Models\User;
 use App\Facades\Spotify;
+use Illuminate\Support\Facades\Config;
 
 class Tasks
 {
-    private $releaseAge = 14; //days
+    private $releaseAge;
+    private $genreCategories;
+
+    public function __construct()
+    {
+        $this->releaseAge = Config::get('spotifyConfig.releaseAge');
+        $this->genreCategories = Config::get('spotifyConfig.genreCategories');
+
+    }
 
     public function updateFollowedArtists()
     {
@@ -91,7 +101,10 @@ class Tasks
     private function updateConnections(Artist $artist, $genres)
     {
         foreach ($genres as $genre) {
-            $genre = Genre::firstOrCreate(['name' => $genre]);
+            $genre = Genre::firstOrCreate(
+                ['name' => $genre],
+                ['category_id' => Categorie::where('name', $this->setGenreCategory($genre))->first()->id],
+            );
             Connection::firstOrCreate([
                 'artist_id' => $artist->id,
                 'genre_id' => $genre->id,
@@ -109,6 +122,38 @@ class Tasks
     private function getReleaseDateThreshold()
     {
         return date('Y-m-d', time() - $this->releaseAge * 24 * 60 * 60);
+    }
+
+    public function genresAnalyse()
+    {
+        $words = [];
+        $genres = Genre::all();
+        foreach ($genres as $genre) {
+            $separated = explode(' ', strtolower($genre->name));
+            foreach ($separated as $item) {
+                if (array_key_exists($item, $words)) {
+                    $words[$item]++;
+                } else {
+                    $words[$item] = 1;
+                }
+            }
+        }
+        arsort($words);
+        dump($words);
+        die();
+    }
+
+    private function setGenreCategory($genre)
+    {
+        $separated = explode(' ', strtolower($genre)); //array of words from real genre. e.g. irish punk rock
+        foreach ($separated as $item) {
+            foreach ($this->genreCategories as $genreCategory) {
+                if (in_array($item, explode('/', $genreCategory))) {
+                    return $genreCategory;
+                }
+            }
+        }
+        return 'other';
     }
 
 }
