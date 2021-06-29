@@ -145,10 +145,9 @@ class Tasks
 
     private function setGenreCategory($genre)
     {
-        $separated = explode(' ', strtolower($genre)); //array of words from real genre. e.g. irish punk rock
-        foreach ($separated as $item) {
-            foreach ($this->genreCategories as $genreCategory) {
-                if (in_array($item, explode('/', $genreCategory))) {
+        foreach ($this->genreCategories as $genreCategory => $keyWords) {
+            foreach ($keyWords as $keyWord) {
+                if (str_contains(strtolower($genre), $keyWord)) {
                     return $genreCategory;
                 }
             }

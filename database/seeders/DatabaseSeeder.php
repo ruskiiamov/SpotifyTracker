@@ -16,7 +16,7 @@ class DatabaseSeeder extends Seeder
     public function run()
     {
         $categories = Config::get('spotifyConfig.genreCategories');
-        foreach ($categories as $category) {
+        foreach ($categories as $category => $keyWords) {
             DB::table('categories')->insert(['name' => $category]);
         }
     }
