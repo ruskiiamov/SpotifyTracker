@@ -18,11 +18,13 @@ class Tasks
 {
     private $releaseAge;
     private $genreCategories;
+    private $exceptions;
 
     public function __construct()
     {
         $this->releaseAge = Config::get('spotifyConfig.releaseAge');
         $this->genreCategories = Config::get('spotifyConfig.genreCategories');
+        $this->exceptions = Config::get('spotifyConfig.exceptions');
 
     }
 
@@ -79,6 +81,14 @@ class Tasks
                 $albums = $result->items;
                 foreach ($albums as $album) {
                     if ($album->release_date_precision == 'day' && $album->release_date >= $releaseDateThreshold) {
+                        $flag = false;
+                        foreach ($this->exceptions as $exception) {
+                            if (str_contains(strtolower($album->name), $exception)) {
+                                $flag = true;
+                                break;
+                            }
+                        }
+                        if ($flag) {continue;}
                         $albumSpotifyId = $album->id;
                         $fullAlbum = Spotify::getAlbum($accessToken, $albumSpotifyId);
                         Album::firstOrCreate(

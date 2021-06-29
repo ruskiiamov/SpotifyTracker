@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'releaseAge' => 14, //days
+    'releaseAge' => 30, //days
 
     'genreCategories' => [
         //genre category => key words
@@ -22,4 +22,6 @@ return [
         'latin' => ['latin'],
         'other' => ['other'],
     ],
+
+    'exceptions' => ['live', 'remix', 'anniversary', 'deluxe', 'expanded'],
 ];

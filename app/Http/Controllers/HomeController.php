@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Facades\Spotify;
 use App\Models\User;
 use App\Services\Tasks;
 use Illuminate\Support\Facades\Auth;
@@ -42,9 +43,6 @@ class HomeController extends Controller
 
     public function genres()
     {
-        $releaseAge = (new Tasks())->releaseAge;
-        dump($releaseAge);
-        die();
         echo "DOESN'T WORK YET";
     }
 }
