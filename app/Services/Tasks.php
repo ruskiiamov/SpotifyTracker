@@ -188,4 +188,21 @@ class Tasks
         });
     }
 
+    public function checkArtistList()
+    {
+        Artist::chunk(200, function ($artists) {
+            foreach ($artists as $artist) {
+                $following = $artist->followings->first();
+                $album = $artist->albums->first();
+                if (is_null($following) && is_null($album)) {
+                    $connections = $artist->connections;
+                    foreach ($connections as $connection) {
+                        $connection->delete();
+                    }
+                    $artist->delete();
+                }
+            }
+        });
+    }
+
 }

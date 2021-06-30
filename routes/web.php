@@ -52,3 +52,5 @@ Route::get('/admin/genres-analyse', [AdminController::class, 'genresAnalyse'])
     ->name('admin::genres-analyse');
 Route::get('/admin/check-albums', [AdminController::class, 'checkAlbumList'])
     ->name('admin::check-albums');
+Route::get('/admin/check-artists', [AdminController::class, 'checkArtistList'])
+    ->name('admin::check-artists');

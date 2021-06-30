@@ -28,4 +28,9 @@ class AdminController extends Controller
         (new Tasks())->checkAlbumList();
         return redirect()->route('index');
     }
+
+    public function checkArtistList() {
+        (new Tasks())->checkArtistList();
+        return redirect()->route('index');
+    }
 }
