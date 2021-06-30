@@ -23,4 +23,9 @@ class AdminController extends Controller
         (new Tasks())->genresAnalyse();
         die();
     }
+
+    public function checkAlbumList() {
+        (new Tasks())->checkAlbumList();
+        return redirect()->route('index');
+    }
 }

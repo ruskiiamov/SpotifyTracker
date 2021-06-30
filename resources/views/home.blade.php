@@ -14,5 +14,6 @@
         <a href="{{ route('admin::artists') }}">Update followed artists</a><br>
         <a href="{{ route('admin::albums') }}">Update albums from followed artists</a><br>
         <a href="{{ route('admin::genres-analyse') }}">Genres analyse</a><br>
+        <a href="{{ route('admin::check-albums') }}">Check album list</a><br>
     </div>
 </x-layout>

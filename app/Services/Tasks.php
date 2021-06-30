@@ -165,4 +165,27 @@ class Tasks
         return 'other';
     }
 
+    public function checkAlbumList()
+    {
+        $refreshToken = User::first()->refresh_token;
+        $accessToken = Spotify::getRefreshedAccessToken($refreshToken);
+
+        Album::chunk(200, function ($albums) use ($accessToken) {
+            $releaseDateThreshold = $this->getReleaseDateThreshold();
+            foreach ($albums as $album) {
+                if ($album->release_date < $releaseDateThreshold) {
+                    $album->delete();
+                } else {
+                    $albumSpotifyId = $album->spotify_id;
+                    $fullAlbum = Spotify::getAlbum($accessToken, $albumSpotifyId);
+                    $popularity = $fullAlbum->popularity;
+                    if ($popularity != $album->popularity) {
+                        $album->popularity = $popularity;
+                        $album->save();
+                    }
+                }
+            }
+        });
+    }
+
 }

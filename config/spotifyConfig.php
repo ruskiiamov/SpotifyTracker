@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'releaseAge' => 30, //days
+    'releaseAge' => 14, //days
 
     'genreCategories' => [
         //genre category => key words
