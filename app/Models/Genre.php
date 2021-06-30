@@ -16,6 +16,6 @@ class Genre extends Model
 
     public function category()
     {
-        return $this->belongsTo(Categorie::class);
+        return $this->belongsTo(Category::class);
     }
 }

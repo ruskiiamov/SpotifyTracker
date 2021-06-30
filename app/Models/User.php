@@ -38,14 +38,19 @@ class User extends Authenticatable
         return $this->belongsToMany(Artist::class, 'followings');
     }
 
-    public function genres()
-    {
-        return $this->belongsToMany(Genre::class, 'subscribes');
-    }
-
     public function followings()
     {
         return $this->hasMany(Following::class);
+    }
+
+    public function categories()
+    {
+        return $this->belongsToMany(Category::class, 'subscriptions');
+    }
+
+    public function subscriptions()
+    {
+        return $this->hasMany(Subscription::class);
     }
 
 }

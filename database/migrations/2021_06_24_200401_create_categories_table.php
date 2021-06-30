@@ -22,6 +22,8 @@ class CreateCategoriesTable extends Migration
         Schema::table('genres', function (Blueprint $table) {
             $table->foreignId('category_id')->constrained('categories');
         });
+
+
     }
 
     /**

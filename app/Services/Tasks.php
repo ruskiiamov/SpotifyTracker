@@ -6,7 +6,7 @@ namespace App\Services;
 
 use App\Models\Album;
 use App\Models\Artist;
-use App\Models\Categorie;
+use App\Models\Category;
 use App\Models\Connection;
 use App\Models\Following;
 use App\Models\Genre;
@@ -25,7 +25,6 @@ class Tasks
         $this->releaseAge = Config::get('spotifyConfig.releaseAge');
         $this->genreCategories = Config::get('spotifyConfig.genreCategories');
         $this->exceptions = Config::get('spotifyConfig.exceptions');
-
     }
 
     public function updateFollowedArtists()
@@ -113,7 +112,7 @@ class Tasks
         foreach ($genres as $genre) {
             $genre = Genre::firstOrCreate(
                 ['name' => $genre],
-                ['category_id' => Categorie::where('name', $this->setGenreCategory($genre))->first()->id],
+                ['category_id' => Category::where('name', $this->setGenreCategory($genre))->first()->id],
             );
             Connection::firstOrCreate([
                 'artist_id' => $artist->id,

@@ -41,8 +41,12 @@ Route::get('/followed', [HomeController::class, 'followed'])
     ->name('followed');
 
 Route::get('/genres', [HomeController::class, 'genres'])
-    ->middleware('auth')
+    //->middleware('auth')
     ->name('genres');
+
+Route::post('/subscription', [HomeController::class, 'saveSubscriptions'])
+    ->middleware('auth')
+    ->name('subscription');
 
 Route::get('/admin/artists', [AdminController::class, 'updateFollowedArtists'])
     ->name('admin::artists');

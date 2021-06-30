@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Facades\Spotify;
+use App\Models\Category;
 use App\Models\User;
 use App\Services\Tasks;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Request;
 
 class HomeController extends Controller
 {
@@ -43,6 +45,16 @@ class HomeController extends Controller
 
     public function genres()
     {
-        echo "DOESN'T WORK YET";
+        $user = Auth::user();
+        $subscriptions = $user->subscriptions;
+        $categories = Category::where('name', '<>', 'other')->get();
+        return view('genres', ['subscriptions' => $subscriptions, 'categories' => $categories]);
+    }
+
+    public function saveSubscriptions()
+    {
+        //dump($request);
+        echo 'hello';
+        die();
     }
 }
