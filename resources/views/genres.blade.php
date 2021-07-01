@@ -7,8 +7,15 @@
 
     <div>
         <form method="post" action="{{ route('subscription') }}">
+            @csrf
             @foreach($categories as $category)
-                <input type="checkbox" name="{{ $category->id }}">{{ $category->name }}<br>
+                <input type="hidden" name="{{ $category->id }}" value="0">
+                <input type="checkbox" name="{{ $category->id }}" value="1"
+                       @if (!is_null($subscriptions->where('category_id', $category->id)->first()))
+                       checked
+                       @endif
+                >
+                <span>{{ $category->name }}</span><br>
             @endforeach
             <br><input type="submit" value="Save">
         </form>

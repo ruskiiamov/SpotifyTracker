@@ -4,11 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Facades\Spotify;
 use App\Models\Category;
+use App\Models\Subscription;
 use App\Models\User;
 use App\Services\Tasks;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Request;
 
 class HomeController extends Controller
 {
@@ -51,10 +52,25 @@ class HomeController extends Controller
         return view('genres', ['subscriptions' => $subscriptions, 'categories' => $categories]);
     }
 
-    public function saveSubscriptions()
+    public function saveSubscriptions(Request $request)
     {
-        //dump($request);
-        echo 'hello';
-        die();
+        $user = Auth::user();
+
+        foreach ($request->except('_token') as $key => $item) {
+            echo "{$key} => {$item}<br>";
+            if ($item) {
+                Subscription::firstOrCreate([
+                    'user_id' => $user->id,
+                    'category_id' => $key,
+                ]);
+            } else {
+                $subscription = Subscription::where('user_id', $user->id)->where('category_id', $key)->first();
+                if (!is_null($subscription)) {
+                    $subscription->delete();
+                }
+            }
+        }
+
+        return redirect()->route('index');
     }
 }
