@@ -58,3 +58,5 @@ Route::get('/admin/check-albums', [AdminController::class, 'checkAlbumList'])
     ->name('admin::check-albums');
 Route::get('/admin/check-artists', [AdminController::class, 'checkArtistList'])
     ->name('admin::check-artists');
+Route::get('/admin/add-releases', [AdminController::class, 'addNewReleases'])
+    ->name('admin::add-releases');

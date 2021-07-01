@@ -24,13 +24,21 @@ class AdminController extends Controller
         die();
     }
 
-    public function checkAlbumList() {
+    public function checkAlbumList()
+    {
         (new Tasks())->checkAlbumList();
         return redirect()->route('index');
     }
 
-    public function checkArtistList() {
+    public function checkArtistList()
+    {
         (new Tasks())->checkArtistList();
+        return redirect()->route('index');
+    }
+
+    public function addNewReleases()
+    {
+        (new Tasks())->addNewReleases();
         return redirect()->route('index');
     }
 }

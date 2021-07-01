@@ -48,7 +48,7 @@ class HomeController extends Controller
     {
         $user = Auth::user();
         $subscriptions = $user->subscriptions;
-        $categories = Category::where('name', '<>', 'other')->get();
+        $categories = Category::where('name', '<>', 'other')->orderBy('name')->get();
         return view('genres', ['subscriptions' => $subscriptions, 'categories' => $categories]);
     }
 

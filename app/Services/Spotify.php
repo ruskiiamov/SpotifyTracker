@@ -197,4 +197,21 @@ class Spotify
 
         return $this->request('GET', $this->apiUrl . "/artists/{$artistId}?", [], $headers);
     }
+
+    public function getNewReleases($accessToken, $offset = null)
+    {
+        $parameters = [
+            'q' => 'tag:new',
+            'type' => 'album',
+            'limit' => '50',
+        ];
+
+        if ($offset) {
+            $parameters['offset'] = $offset;
+        }
+
+        $headers = ['Authorization' => 'Bearer ' . $accessToken];
+
+        return $this->request('GET', $this->apiUrl . '/search?', $parameters, $headers);
+    }
 }

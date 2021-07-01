@@ -17,4 +17,9 @@ class Category extends Model
     {
         return $this->hasMany(Genre::class);
     }
+
+    public function subscriptions()
+    {
+        return $this->hasMany(Subscription::class);
+    }
 }
