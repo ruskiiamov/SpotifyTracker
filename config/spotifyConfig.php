@@ -6,7 +6,7 @@ return [
     'genreCategories' => [
         //genre category => key words
         'rock' => ['rock', 'grunge', 'britpop', 'surf', 'new wave', 'visual kei', 'shoegaze',
-            'merseybeat', 'dreamo', 'beatlesque'],
+            'merseybeat', 'dreamo', 'beatlesque', 'oshare kei'],
         'metal' => ['metal', 'thrash', 'djent', 'doom', 'sludge'],
         'hip hop' => ['hip hop', 'rap', 'boom bap'],
         'punk' => ['punk', 'hardcore', 'emo', 'oi', 'crust', 'screamo', 'nyhc', 'easycore',
@@ -27,5 +27,5 @@ return [
         'other' => ['other'],
     ],
 
-    'exceptions' => ['live', 'remix', 'anniversary', 'deluxe', 'expanded', 'instrumentals', 'best'],
+    'exceptions' => ['live', 'remix', 'anniversary', 'deluxe', 'expanded', 'instrumentals', 'best', 'soundtrack'],
 ];

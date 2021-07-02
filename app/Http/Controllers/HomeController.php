@@ -34,14 +34,14 @@ class HomeController extends Controller
                 if (!in_array($country, $markets)) {
                     continue;
                 }
-                $newReleases[] = $album;
+                $newReleases[$album->release_date][$album->popularity] = $album;
             }
         }
-        foreach ($newReleases as $newRelease) {
-            $artist = $newRelease->artist;
-            echo "<a href='https://open.spotify.com/album/{$newRelease->spotify_id}'>{$artist->name} - {$newRelease->name}</a><br>";
+        krsort($newReleases);
+        foreach ($newReleases as $item) {
+            krsort($item);
         }
-        die();
+        return view('followed', ['newReleases' => $newReleases]);
     }
 
     public function genres()
