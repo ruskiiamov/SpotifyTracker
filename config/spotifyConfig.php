@@ -27,5 +27,6 @@ return [
         'other' => ['other'],
     ],
 
-    'exceptions' => ['live', 'remix', 'anniversary', 'deluxe', 'expanded', 'instrumentals', 'best', 'soundtrack'],
+    'exceptions' => ['live', 'remix', 'anniversary', 'deluxe', 'expanded', 'instrumentals',
+        'best', 'soundtrack', 'demos'],
 ];

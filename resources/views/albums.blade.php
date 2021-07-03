@@ -1,7 +1,7 @@
 <x-layout>
     <x-slot name="header">
         <h2>
-            The followed artists releases for last two weeks
+            The {{ $title }} releases for the last two weeks
         </h2>
     </x-slot>
 

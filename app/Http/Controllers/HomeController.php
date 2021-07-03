@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Facades\Spotify;
+use App\Models\Album;
 use App\Models\Category;
 use App\Models\Subscription;
 use App\Models\User;
@@ -41,7 +42,37 @@ class HomeController extends Controller
         foreach ($newReleases as $item) {
             krsort($item);
         }
-        return view('followed', ['newReleases' => $newReleases]);
+        $title = 'followed artists';
+        return view('albums', ['newReleases' => $newReleases, 'title' => $title]);
+    }
+
+    public function subscribed()
+    {
+        $user = Auth::user();
+        $country = $user->country;
+        $subscribedCategories = [];
+        foreach ($user->categories as $category) {
+            $subscribedCategories[] = $category->name;
+        }
+        $newReleases = [];
+        $albums = Album::all();
+        foreach ($albums as $album) {
+            $markets = json_decode($album->markets);
+            if (!in_array($country, $markets)) {
+                continue;
+            }
+            $genres = $album->artist->genres;
+            foreach ($genres as $genre) {
+                $category = $genre->category;
+                if (in_array($category->name, $subscribedCategories)) {
+                    $newReleases[$album->release_date][] = $album;
+                    break;
+                }
+            }
+        }
+        $sortedNewReleases = $this->sortReleases($newReleases);
+        $title = 'subscribed genres';
+        return view('albums', ['newReleases' => $sortedNewReleases, 'title' => $title]);
     }
 
     public function genres()
@@ -73,4 +104,17 @@ class HomeController extends Controller
 
         return redirect()->route('index');
     }
+
+    private function sortReleases($array)
+    {
+        krsort($array);
+        foreach ($array as $key => $item) {
+            usort($item, function ($a, $b) {
+                return $b->popularity - $a->popularity;
+            });
+            $array[$key] = $item;
+        }
+        return $array;
+    }
+
 }
