@@ -19,5 +19,6 @@
         <a href="{{ route('admin::check-albums') }}">Check album list</a><br>
         <a href="{{ route('admin::check-artists') }}">Check artist list</a><br>
         <a href="{{ route('admin::add-releases') }}">Add new releases by genres</a><br>
+        <a href="{{ route('admin::test') }}">TEST</a><br>
     </div>
 </x-layout>

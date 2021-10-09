@@ -16,7 +16,7 @@ return [
         'blues' => ['blues'],
         'funk' => ['funk', 'motown'],
         'soul/r&b' => ['soul', 'r&b'],
-        'classical' => ['classical', 'baroque', 'romantic', 'early'],
+        'classical' => ['classical', 'baroque', 'romantic', 'early', 'choral'],
         'folk/country' => ['folk', 'country', 'bluegrass', 'americana', 'afrobeat'],
         'reggae/ska' => ['reggae', 'ska'],
         'electronic' => ['electro', 'rave', 'downtempo', 'trip hop', 'breakbeat',
@@ -29,4 +29,15 @@ return [
 
     'exceptions' => ['live', 'remix', 'anniversary', 'deluxe', 'expanded', 'instrumentals',
         'best', 'soundtrack', 'demos'],
+
+    'artistIdExceptions' => [
+        '5aIqB5nVVvmFsvSdExz408', //Johann Sebastian Bach
+        '4NJhFmfw43RLBLjQvxDuRS', //Wolfgang Amadeus Mozart
+        '7y97mc3bZRFXzT2szRM4L4', //Frédéric Chopin
+        '2wOqMjp9TyABvtHdOSOTUS', //Ludwig van Beethoven
+        '1Uff91EOsvd99rtAupatMP', //Claude Debussy
+        '3MKCzCnpzw3TjUYs2v7vDA', //Pyotr Ilyich Tchaikovsky
+        '0Kekt6CKSo0m5mivKcoH51', //Sergei Rachmaninoff
+        '2QOIawHpSlOwXDvSqQ9YJR', //Antonio Vivaldi
+    ]
 ];

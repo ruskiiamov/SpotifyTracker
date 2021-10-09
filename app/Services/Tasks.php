@@ -19,12 +19,14 @@ class Tasks
     private $releaseAge;
     private $genreCategories;
     private $exceptions;
+    private $artistIdExceptions;
 
     public function __construct()
     {
         $this->releaseAge = Config::get('spotifyConfig.releaseAge');
         $this->genreCategories = Config::get('spotifyConfig.genreCategories');
         $this->exceptions = Config::get('spotifyConfig.exceptions');
+        $this->artistIdExceptions = Config::get('spotifyConfig.artistIdExceptions');
     }
 
     public function updateFollowedArtists()
@@ -223,7 +225,6 @@ class Tasks
 
     public function addNewReleases()
     {
-        $t1 = time();
         $refreshToken = User::first()->refresh_token;
         $accessToken = Spotify::getRefreshedAccessToken($refreshToken);
 
@@ -235,6 +236,9 @@ class Tasks
             foreach ($albums as $album) {
                 if ($album->release_date_precision == 'day' && $album->album_type == 'album' && $this->isAlbumNameOk($album->name)) {
                     $artistSpotifyId = $album->artists[0]->id;
+                    if (in_array($artistSpotifyId, $this->artistIdExceptions)) {
+                        continue;
+                    }
                     $fullArtist = Spotify::getArtist($accessToken, $artistSpotifyId);
                     $this->addGenres($fullArtist->genres);
                     if (!$this->isGenreSubscribed($fullArtist->genres)) {
@@ -263,9 +267,6 @@ class Tasks
                 }
             }
         } while ($offset <= 950);
-
-        dump(time() - $t1);
-        die();
     }
 
     private function isGenreSubscribed($genreNames)

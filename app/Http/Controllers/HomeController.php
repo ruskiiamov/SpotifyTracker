@@ -61,6 +61,10 @@ class HomeController extends Controller
             if (!in_array($country, $markets)) {
                 continue;
             }
+            $artistId = $album->artist->id;
+            if (!is_null($user->artists->find($artistId))) {
+                continue;
+            }
             $genres = $album->artist->genres;
             foreach ($genres as $genre) {
                 $category = $genre->category;

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Facades\Spotify;
+use App\Models\User;
 use App\Services\Tasks;
 
 class AdminController extends Controller
@@ -40,5 +42,16 @@ class AdminController extends Controller
     {
         (new Tasks())->addNewReleases();
         return redirect()->route('index');
+    }
+
+    public function test()
+    {
+        $refreshToken = User::first()->refresh_token;
+        $accessToken = Spotify::getRefreshedAccessToken($refreshToken);
+
+        $result = Spotify::getAlbum($accessToken, '0doIEoeVI4j8R1hoQ7eHA1');
+
+        dump($result);
+        die();
     }
 }
