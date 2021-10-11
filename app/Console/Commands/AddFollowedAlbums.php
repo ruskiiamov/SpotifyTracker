@@ -5,21 +5,21 @@ namespace App\Console\Commands;
 use App\Services\Tasks;
 use Illuminate\Console\Command;
 
-class AddNewReleases extends Command
+class AddFollowedAlbums extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'spotify:add-new-releases';
+    protected $signature = 'spotify:add-followed-albums';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Add new releases ';
+    protected $description = 'Add new albums from followed artists for all users';
 
     /**
      * Create a new command instance.
@@ -34,15 +34,14 @@ class AddNewReleases extends Command
     /**
      * Execute the console command.
      *
-     * @return int
      */
     public function handle()
     {
         $this->line('Adding...');
         $startTime = time();
-        (new Tasks())->addNewReleases();
+        (new Tasks())->addFollowedAlbums();
         $endTime = time();
         $duration = $endTime - $startTime;
-        $this->info('Success: New releases added | time: ' . $duration . ' seconds');
+        $this->info('Success: New albums from followed artists added | time: ' . $duration . ' seconds');
     }
 }

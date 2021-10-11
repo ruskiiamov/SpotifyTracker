@@ -5,21 +5,21 @@ namespace App\Console\Commands;
 use App\Services\Tasks;
 use Illuminate\Console\Command;
 
-class AddNewReleases extends Command
+class ClearAlbums extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'spotify:add-new-releases';
+    protected $signature = 'spotify:clear-albums';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Add new releases ';
+    protected $description = 'Delete obsolete albums';
 
     /**
      * Create a new command instance.
@@ -34,15 +34,14 @@ class AddNewReleases extends Command
     /**
      * Execute the console command.
      *
-     * @return int
      */
     public function handle()
     {
-        $this->line('Adding...');
+        $this->line('Clearing...');
         $startTime = time();
-        (new Tasks())->addNewReleases();
+        (new Tasks())->clearAlbums();
         $endTime = time();
         $duration = $endTime - $startTime;
-        $this->info('Success: New releases added | time: ' . $duration . ' seconds');
+        $this->info('Success: Albums table cleared | time: ' . $duration . ' seconds');
     }
 }

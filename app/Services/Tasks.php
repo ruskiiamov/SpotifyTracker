@@ -67,7 +67,7 @@ class Tasks
         }
     }
 
-    public function updateAlbumList()
+    public function addFollowedAlbums()
     {
         $refreshToken = User::first()->refresh_token;
         $accessToken = Spotify::getRefreshedAccessToken($refreshToken);
@@ -79,7 +79,11 @@ class Tasks
                     continue;
                 }
                 $result = Spotify::getArtistAlbums($accessToken, $artist->spotify_id);
-                $albums = $result->items;
+                try {
+                    $albums = $result->items;
+                } catch (\Throwable $e) {
+                    continue;
+                }
                 foreach ($albums as $album) {
                     if ($album->release_date_precision == 'day' && $album->release_date >= $releaseDateThreshold) {
                         $flag = false;
@@ -157,8 +161,11 @@ class Tasks
             }
         }
         arsort($words);
-        dump($words);
-        die();
+        $result[] = [];
+        foreach ($words as $word => $amount) {
+            $result[] = [$word, $amount];
+        }
+        return $result;
     }
 
     private function setGenreCategory($genre)
@@ -173,7 +180,7 @@ class Tasks
         return 'other';
     }
 
-    public function checkAlbumList()
+    public function clearAlbums()
     {
         $refreshToken = User::first()->refresh_token;
         $accessToken = Spotify::getRefreshedAccessToken($refreshToken);
@@ -196,7 +203,7 @@ class Tasks
         });
     }
 
-    public function checkArtistList()
+    public function clearArtists()
     {
         Artist::chunk(200, function ($artists) {
             foreach ($artists as $artist) {
@@ -240,7 +247,11 @@ class Tasks
                         continue;
                     }
                     $fullArtist = Spotify::getArtist($accessToken, $artistSpotifyId);
-                    $this->addGenres($fullArtist->genres);
+                    try {
+                        $this->addGenres($fullArtist->genres);
+                    } catch (\Throwable $e) {
+                        continue;
+                    }
                     if (!$this->isGenreSubscribed($fullArtist->genres)) {
                         continue;
                     }
@@ -269,18 +280,6 @@ class Tasks
                     } catch (\Throwable $e) {
                         continue;
                     }
-
-//                    Album::firstOrCreate(
-//                        ['spotify_id' => $albumSpotifyId],
-//                        [
-//                            'name' => $fullAlbum->name,
-//                            'release_date' => $fullAlbum->release_date,
-//                            'artist_id' => $artist->id,
-//                            'markets' => json_encode($fullAlbum->available_markets, JSON_UNESCAPED_UNICODE),
-//                            'image' => $fullAlbum->images[1]->url,
-//                            'popularity' => $fullAlbum->popularity,
-//                        ]
-//                    );
                 }
             }
         } while ($offset <= 950);

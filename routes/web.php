@@ -51,18 +51,3 @@ Route::get('/genres', [HomeController::class, 'genres'])
 Route::post('/subscription', [HomeController::class, 'saveSubscriptions'])
     ->middleware('auth')
     ->name('subscription');
-
-Route::get('/admin/artists', [AdminController::class, 'updateFollowedArtists'])
-    ->name('admin::artists');
-Route::get('/admin/albums', [AdminController::class, 'updateAlbumList'])
-    ->name('admin::albums');
-Route::get('/admin/genres-analyse', [AdminController::class, 'genresAnalyse'])
-    ->name('admin::genres-analyse');
-Route::get('/admin/check-albums', [AdminController::class, 'checkAlbumList'])
-    ->name('admin::check-albums');
-Route::get('/admin/check-artists', [AdminController::class, 'checkArtistList'])
-    ->name('admin::check-artists');
-Route::get('/admin/add-releases', [AdminController::class, 'addNewReleases'])
-    ->name('admin::add-releases');
-Route::get('/admin/test', [AdminController::class, 'test'])
-    ->name('admin::test');

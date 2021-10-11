@@ -12,7 +12,7 @@ class UpdateFollowedArtists extends Command
      *
      * @var string
      */
-    protected $signature = 'spotify:artists';
+    protected $signature = 'spotify:update-followed-artists';
 
     /**
      * The console command description.
@@ -34,11 +34,14 @@ class UpdateFollowedArtists extends Command
     /**
      * Execute the console command.
      *
-     * @return int
      */
     public function handle()
     {
+        $this->line('Updating...');
+        $startTime = time();
         (new Tasks())->updateFollowedArtists();
-        $this->info('Success: Followed artists list updated');
+        $endTime = time();
+        $duration = $endTime - $startTime;
+        $this->info('Success: Followed artists updated | time: ' . $duration . ' seconds');
     }
 }

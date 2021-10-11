@@ -5,21 +5,21 @@ namespace App\Console\Commands;
 use App\Services\Tasks;
 use Illuminate\Console\Command;
 
-class AddNewReleases extends Command
+class GenresAnalyse extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'spotify:add-new-releases';
+    protected $signature = 'spotify:genres-analyse';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Add new releases ';
+    protected $description = 'Analyse most repeated words in genre titles';
 
     /**
      * Create a new command instance.
@@ -34,15 +34,13 @@ class AddNewReleases extends Command
     /**
      * Execute the console command.
      *
-     * @return int
      */
     public function handle()
     {
-        $this->line('Adding...');
-        $startTime = time();
-        (new Tasks())->addNewReleases();
-        $endTime = time();
-        $duration = $endTime - $startTime;
-        $this->info('Success: New releases added | time: ' . $duration . ' seconds');
+        $words = (new Tasks())->genresAnalyse();
+        $this->table(
+            ['Word', 'Frequency'],
+            $words
+        );
     }
 }
