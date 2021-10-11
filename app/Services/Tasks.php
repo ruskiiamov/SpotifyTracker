@@ -253,17 +253,34 @@ class Tasks
 
                     $albumSpotifyId = $album->id;
                     $fullAlbum = Spotify::getAlbum($accessToken, $albumSpotifyId);
-                    Album::firstOrCreate(
-                        ['spotify_id' => $albumSpotifyId],
-                        [
-                            'name' => $fullAlbum->name,
-                            'release_date' => $fullAlbum->release_date,
-                            'artist_id' => $artist->id,
-                            'markets' => json_encode($fullAlbum->available_markets, JSON_UNESCAPED_UNICODE),
-                            'image' => $fullAlbum->images[1]->url,
-                            'popularity' => $fullAlbum->popularity,
-                        ]
-                    );
+
+                    try {
+                        Album::firstOrCreate(
+                            ['spotify_id' => $albumSpotifyId],
+                            [
+                                'name' => $fullAlbum->name,
+                                'release_date' => $fullAlbum->release_date,
+                                'artist_id' => $artist->id,
+                                'markets' => json_encode($fullAlbum->available_markets, JSON_UNESCAPED_UNICODE),
+                                'image' => $fullAlbum->images[1]->url,
+                                'popularity' => $fullAlbum->popularity,
+                            ]
+                        );
+                    } catch (\Throwable $e) {
+                        continue;
+                    }
+
+//                    Album::firstOrCreate(
+//                        ['spotify_id' => $albumSpotifyId],
+//                        [
+//                            'name' => $fullAlbum->name,
+//                            'release_date' => $fullAlbum->release_date,
+//                            'artist_id' => $artist->id,
+//                            'markets' => json_encode($fullAlbum->available_markets, JSON_UNESCAPED_UNICODE),
+//                            'image' => $fullAlbum->images[1]->url,
+//                            'popularity' => $fullAlbum->popularity,
+//                        ]
+//                    );
                 }
             }
         } while ($offset <= 950);
