@@ -31,6 +31,7 @@ class Tasks
 
     public function updateFollowedArtists()
     {
+        $artistAmount = 0;
         $users = User::all();
 
         foreach ($users as $user) {
@@ -43,6 +44,7 @@ class Tasks
                 $result = Spotify::getFollowedArtists($accessToken, $after);
                 $artists = $result->artists->items;
                 foreach ($artists as $item) {
+                    $artistAmount++;
                     $artistId = $item->id;
                     $actualArtistsIdList[] = $artistId;
                     $artist = Artist::firstOrCreate(
@@ -65,6 +67,7 @@ class Tasks
                 }
             }
         }
+        return $artistAmount;
     }
 
     public function addFollowedAlbums()

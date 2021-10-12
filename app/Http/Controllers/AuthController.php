@@ -7,6 +7,9 @@ use App\Http\Requests\CodeSpotifyRequest;
 use App\Http\Requests\LoginSpotifyRequest;
 use App\Models\User;
 use App\Services\Spotify\Session;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 

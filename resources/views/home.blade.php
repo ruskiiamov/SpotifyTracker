@@ -12,8 +12,5 @@
         <a href="{{ route('followed') }}">Show Followed Artists New Releases</a><br>
         <a href="{{ route('genres') }}">Set Genres Subscription</a><br>
         <a href="{{ route('subscribed') }}">Show Subscribed Genres New Releases</a><br>
-        <h4>Admin tools:</h4>
-        <a href="{{ route('admin::genres-analyse') }}">Genres analyse</a><br>
-        <a href="{{ route('admin::test') }}">TEST</a><br>
     </div>
 </x-layout>

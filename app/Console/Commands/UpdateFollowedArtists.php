@@ -39,9 +39,11 @@ class UpdateFollowedArtists extends Command
     {
         $this->line('Updating...');
         $startTime = time();
-        (new Tasks())->updateFollowedArtists();
+        $artistAmount = (new Tasks())->updateFollowedArtists();
         $endTime = time();
         $duration = $endTime - $startTime;
-        $this->info('Success: Followed artists updated | time: ' . $duration . ' seconds');
+        $this->info('Success: Followed artists updated');
+        $this->info('Time: ' . $duration . ' seconds');
+        $this->info($artistAmount . ' artists were analysed');
     }
 }
