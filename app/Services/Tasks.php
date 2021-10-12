@@ -29,45 +29,90 @@ class Tasks
         $this->artistIdExceptions = Config::get('spotifyConfig.artistIdExceptions');
     }
 
-    public function updateFollowedArtists()
+    /**
+     * Update followed artists for all users
+     *
+     * @return int[]
+     */
+    public function updateFollowedArtists(): array
     {
         $artistAmount = 0;
-        $users = User::all();
+        $userAmount = 0;
+        $deletedAmount = 0;
+        $addedAmount = 0;
+        $errors = [];
 
-        foreach ($users as $user) {
-            $refreshToken = $user->refresh_token;
-            $accessToken = Spotify::getRefreshedAccessToken($refreshToken);
+        User::chunk(200, function ($users) use (&$artistAmount, &$userAmount, &$errors, &$deletedAmount, &$addedAmount){
+            foreach ($users as $user) {
+                $userAmount++;
 
-            $after = null;
-            $actualArtistsIdList = [];
-            do {
-                $result = Spotify::getFollowedArtists($accessToken, $after);
-                $artists = $result->artists->items;
-                foreach ($artists as $item) {
-                    $artistAmount++;
-                    $artistId = $item->id;
-                    $actualArtistsIdList[] = $artistId;
-                    $artist = Artist::firstOrCreate(
-                        ['spotify_id' => $artistId],
-                        ['name' => $item->name]
-                    );
-                    $this->updateConnections($artist, $item->genres);
-                    Following::firstOrCreate([
-                        'user_id' => $user->id,
-                        'artist_id' => $artist->id,
-                    ]);
+                try {
+                    $refreshToken = $user->refresh_token;
+                    $accessToken = Spotify::getRefreshedAccessToken($refreshToken);
+                } catch (\Exception $e) {
+                    $errors[] = $e->getMessage();
+                    continue;
                 }
-                $after = $result->artists->cursors->after;
-            } while ($after);
 
-            $followings = $user->followings;
-            foreach ($followings as $following) {
-                if (!in_array($following->artist->spotify_id, $actualArtistsIdList)) {
-                    $following->delete();
+                $after = null;
+                $actualArtistsIdList = [];
+                do {
+                    try {
+                        $result = Spotify::getFollowedArtists($accessToken, $after);
+                        $artists = $result->artists->items;
+                        $after = $result->artists->cursors->after;
+                    } catch (\Exception $e) {
+                        $errors[] = $e->getMessage();
+                        break;
+                    }
+                    foreach ($artists as $item) {
+                        $artistAmount++;
+                        try {
+                            $artistId = $item->id;
+                            $actualArtistsIdList[] = $artistId;
+                            //$artist = Artist::where('spotify_id', $artistId)->first();
+
+                            $artist = Artist::firstOrCreate(
+                                ['spotify_id' => $artistId],
+                                ['name' => $item->name]
+                            );
+                            $this->updateConnections($artist, $item->genres); //TODO create separated command for all artists (now artists can be repeated)
+                            Following::firstOrCreate([
+                                'user_id' => $user->id,
+                                'artist_id' => $artist->id,
+                            ]);
+                        } catch (\Exception $e) {
+                            $errors[] = $e->getMessage();
+                            continue;
+                        }
+                    }
+                } while ($after);
+
+                try {
+                    $followings = $user->followings;
+                } catch (\Exception $e) {
+                    $errors[] = $e->getMessage();
+                    continue;
+                }
+                foreach ($followings as $following) {
+                    try {
+                        if (!in_array($following->artist->spotify_id, $actualArtistsIdList)) {
+                            $following->delete();
+                            $deletedAmount++;
+                        }
+                    } catch (\Exception $e) {
+                        $errors[] = $e->getMessage();
+                        continue;
+                    }
                 }
             }
-        }
-        return $artistAmount;
+        });
+        return [
+            'artists' => $artistAmount,
+            'users' => $userAmount,
+            'deleted' => $deletedAmount,
+            'errors' => $errors,
+            ];
     }
 
     public function addFollowedAlbums()
