@@ -36,21 +36,30 @@ class Tasks
      */
     public function updateFollowedArtists(): array
     {
-        $artistAmount = 0;
-        $userAmount = 0;
-        $deletedAmount = 0;
-        $addedAmount = 0;
-        $errors = [];
+        $report = [
+            'analysed_artists' => 0,
+            'analysed_users' => 0,
+            'created_artists' => 0,
+            'created_followings' => 0,
+            'deleted_followings' => 0,
+            'error_messages' => [],
+        ];
+//        $artistAmount = 0;
+//        $userAmount = 0;
+//        $deletedAmount = 0;
+//        $addedAmount = 0;
+//        $createdAmount = 0;
+//        $errors = [];
 
-        User::chunk(200, function ($users) use (&$artistAmount, &$userAmount, &$errors, &$deletedAmount, &$addedAmount){
+        User::chunk(200, function ($users) use (&$report){
             foreach ($users as $user) {
-                $userAmount++;
+                $report['analysed_users']++;
 
                 try {
                     $refreshToken = $user->refresh_token;
                     $accessToken = Spotify::getRefreshedAccessToken($refreshToken);
                 } catch (\Exception $e) {
-                    $errors[] = $e->getMessage();
+                    $report['error_messages'][] = $e->getMessage();
                     continue;
                 }
 
@@ -62,27 +71,36 @@ class Tasks
                         $artists = $result->artists->items;
                         $after = $result->artists->cursors->after;
                     } catch (\Exception $e) {
-                        $errors[] = $e->getMessage();
+                        $report['error_messages'][] = $e->getMessage();
                         break;
                     }
                     foreach ($artists as $item) {
-                        $artistAmount++;
+                        $report['analysed_artists']++;
                         try {
                             $artistId = $item->id;
                             $actualArtistsIdList[] = $artistId;
-                            //$artist = Artist::where('spotify_id', $artistId)->first();
+                            $artist = Artist::where('spotify_id', $artistId)->first();
+                            if (!isset($artist)) {
+                                $artist = new Artist();
+                                $artist->fill([
+                                    'spotify_id' => $artistId,
+                                    'name' => $item->name,
+                                ])->save();
+                                $report['created_artists']++;
+                                $this->updateConnections($artist, $item->genres); //TODO create separated command for all artists (now artists can be repeated)
+                            }
 
-                            $artist = Artist::firstOrCreate(
-                                ['spotify_id' => $artistId],
-                                ['name' => $item->name]
-                            );
-                            $this->updateConnections($artist, $item->genres); //TODO create separated command for all artists (now artists can be repeated)
-                            Following::firstOrCreate([
+//                            $artist = Artist::firstOrCreate(
+//                                ['spotify_id' => $artistId],
+//                                ['name' => $item->name]
+//                            );
+
+                            Following::firstOrCreate([ //TODO add counter for created followings
                                 'user_id' => $user->id,
                                 'artist_id' => $artist->id,
                             ]);
                         } catch (\Exception $e) {
-                            $errors[] = $e->getMessage();
+                            $report['error_messages'][] = $e->getMessage();
                             continue;
                         }
                     }
@@ -91,28 +109,23 @@ class Tasks
                 try {
                     $followings = $user->followings;
                 } catch (\Exception $e) {
-                    $errors[] = $e->getMessage();
+                    $report['error_messages'][] = $e->getMessage();
                     continue;
                 }
                 foreach ($followings as $following) {
                     try {
                         if (!in_array($following->artist->spotify_id, $actualArtistsIdList)) {
                             $following->delete();
-                            $deletedAmount++;
+                            $report['deleted_followings']++;
                         }
                     } catch (\Exception $e) {
-                        $errors[] = $e->getMessage();
+                        $report['error_messages'][] = $e->getMessage();
                         continue;
                     }
                 }
             }
         });
-        return [
-            'artists' => $artistAmount,
-            'users' => $userAmount,
-            'deleted' => $deletedAmount,
-            'errors' => $errors,
-            ];
+        return $report;
     }
 
     public function addFollowedAlbums()
