@@ -32,7 +32,7 @@ class Tasks
     /**
      * Update followed artists for all users
      *
-     * @return int[]
+     * @return array
      */
     public function updateFollowedArtists(): array
     {
@@ -44,12 +44,6 @@ class Tasks
             'deleted_followings' => 0,
             'error_messages' => [],
         ];
-//        $artistAmount = 0;
-//        $userAmount = 0;
-//        $deletedAmount = 0;
-//        $addedAmount = 0;
-//        $createdAmount = 0;
-//        $errors = [];
 
         User::chunk(200, function ($users) use (&$report){
             foreach ($users as $user) {
@@ -89,16 +83,16 @@ class Tasks
                                 $report['created_artists']++;
                                 $this->updateConnections($artist, $item->genres); //TODO create separated command for all artists (now artists can be repeated)
                             }
-
-//                            $artist = Artist::firstOrCreate(
-//                                ['spotify_id' => $artistId],
-//                                ['name' => $item->name]
-//                            );
-
-                            Following::firstOrCreate([ //TODO add counter for created followings
-                                'user_id' => $user->id,
-                                'artist_id' => $artist->id,
-                            ]);
+                            $following = Following::where('user_id', $user->id)
+                                ->where('artist_id', $artist->id)->first();
+                            if (!isset($following)) {
+                                $following = new Following();
+                                $following->fill([
+                                    'user_id' => $user->id,
+                                    'artist_id' => $artist->id,
+                                ])->save();
+                                $report['created_followings']++;
+                            }
                         } catch (\Exception $e) {
                             $report['error_messages'][] = $e->getMessage();
                             continue;

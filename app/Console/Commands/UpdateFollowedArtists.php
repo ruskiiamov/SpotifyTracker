@@ -44,8 +44,19 @@ class UpdateFollowedArtists extends Command
         $duration = $endTime - $startTime;
         $this->info('Success: Followed artists updated');
         $this->info('Time: ' . $duration . ' seconds');
-        $this->info("{$report['analysed_artists']} artists for {$report['analysed_users']} users were analysed");
-        $this->info("{$report['created_artists']} artists created");
-        $this->info("{$report['deleted_followings']} followings deleted");
+        $this->info('Analysed artists: ' . $report['analysed_artists']);
+        $this->info('Analysed users: ' . $report['analysed_users']);
+        $this->info('Created artists: ' . $report['created_artists']);
+        $this->info('Created followings: ' . $report['created_followings']);
+        $this->info('Deleted followings: ' . $report['deleted_followings']);
+        if (empty($report['error_messages'])) {
+            $this->info('Errors: 0');
+        } else {
+            $this->error('Errors: ' . count($report['error_messages']));
+            foreach ($report['error_messages'] as $error_message) {
+                $this->line($error_message);
+                $this->newLine();
+            }
+        }
     }
 }
