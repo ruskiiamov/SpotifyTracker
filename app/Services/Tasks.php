@@ -168,6 +168,18 @@ class Tasks
         });
     }
 
+    public function updateGenres()
+    {
+        $refreshToken = User::first()->refresh_token;
+        $accessToken = Spotify::getRefreshedAccessToken($refreshToken);
+
+        Artist::chunk(200, function ($artists) use ($accessToken) {
+            foreach ($artists as $artist) {
+                $result = Spotify::getArtist($accessToken, $artist->spotify_id); // TODO to think - is it really needed?
+            }
+        });
+    }
+
     private function updateConnections(Artist $artist, $genres)
     {
         $this->addGenres($genres);
