@@ -12,6 +12,7 @@ class Artist extends Model
     protected $fillable = [
         'spotify_id',
         'name',
+        'checked_at',
     ];
 
     public function followings()
