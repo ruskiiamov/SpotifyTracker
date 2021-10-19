@@ -81,7 +81,6 @@ class Tasks
                                     'name' => $item->name,
                                 ])->save();
                                 $report['created_artists']++;
-                                $this->updateConnections($artist, $item->genres); //TODO create separated command for all artists (now artists can be repeated)
                             }
                             $following = Following::where('user_id', $user->id)
                                 ->where('artist_id', $artist->id)->first();
@@ -127,20 +126,20 @@ class Tasks
         $refreshToken = User::first()->refresh_token;
         $accessToken = Spotify::getRefreshedAccessToken($refreshToken);
 
-        Artist::chunk(200, function ($artists) use ($accessToken) {
+        Artist::chunk(200, function ($artists) use ($accessToken) { // TODO get only artists with followings straight from the DB
             $releaseDateThreshold = $this->getReleaseDateThreshold();
             foreach ($artists as $artist) {
-                if (is_null($artist->followings->first())) {
+                if (is_null($artist->followings->first())) { // TODO remove that check
                     continue;
                 }
-                $result = Spotify::getArtistAlbums($accessToken, $artist->spotify_id);
+                $result = Spotify::getArtistAlbums($accessToken, $artist->spotify_id); // TODO get only one or two last albums
                 try {
                     $albums = $result->items;
                 } catch (\Throwable $e) {
                     continue;
                 }
                 foreach ($albums as $album) {
-                    if ($album->release_date_precision == 'day' && $album->release_date >= $releaseDateThreshold) {
+                    if ($album->release_date_precision == 'day' && $album->release_date >= $releaseDateThreshold) { // TODO think about simplifying that code without flag
                         $flag = false;
                         foreach ($this->exceptions as $exception) {
                             if (str_contains(strtolower($album->name), $exception)) {
@@ -161,7 +160,7 @@ class Tasks
                                 'image' => $fullAlbum->images[1]->url,
                                 'popularity' => $fullAlbum->popularity,
                             ]
-                        );
+                        ); // TODO add genres check for that artist
                     }
                 }
             }
