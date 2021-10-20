@@ -126,13 +126,13 @@ class Tasks
         $refreshToken = User::first()->refresh_token;
         $accessToken = Spotify::getRefreshedAccessToken($refreshToken);
 
-        Artist::chunk(200, function ($artists) use ($accessToken) { // TODO get only artists with followings straight from the DB
+        Artist::chunk(200, function ($artists) use ($accessToken) { // TODO get only artists with followings and relevant checked_at straight from the DB
             $releaseDateThreshold = $this->getReleaseDateThreshold();
             foreach ($artists as $artist) {
                 if (is_null($artist->followings->first())) { // TODO remove that check
                     continue;
                 }
-                $result = Spotify::getArtistAlbums($accessToken, $artist->spotify_id); // TODO get only one or two last albums
+                $result = Spotify::getLastArtistAlbum($accessToken, $artist->spotify_id);
                 try {
                     $albums = $result->items;
                 } catch (\Throwable $e) {
@@ -149,6 +149,8 @@ class Tasks
                         }
                         if ($flag) {continue;}
                         $albumSpotifyId = $album->id;
+                        //$newAlbum = Album::where('spotify_id', $albumSpotifyId);
+
                         $fullAlbum = Spotify::getAlbum($accessToken, $albumSpotifyId);
                         Album::firstOrCreate(
                             ['spotify_id' => $albumSpotifyId],
@@ -163,18 +165,6 @@ class Tasks
                         ); // TODO add genres check for that artist
                     }
                 }
-            }
-        });
-    }
-
-    public function updateGenres()
-    {
-        $refreshToken = User::first()->refresh_token;
-        $accessToken = Spotify::getRefreshedAccessToken($refreshToken);
-
-        Artist::chunk(200, function ($artists) use ($accessToken) {
-            foreach ($artists as $artist) {
-                $result = Spotify::getArtist($accessToken, $artist->spotify_id); // TODO to think - is it really needed?
             }
         });
     }
@@ -197,7 +187,7 @@ class Tasks
         }
     }
 
-    private function addGenres($genres)
+    private function addGenres($genres) //TODO shift that code to updateConnections method
     {
         foreach ($genres as $genre) {
             Genre::firstOrCreate(
@@ -314,7 +304,7 @@ class Tasks
                     }
                     $fullArtist = Spotify::getArtist($accessToken, $artistSpotifyId);
                     try {
-                        $this->addGenres($fullArtist->genres);
+                        $this->addGenres($fullArtist->genres); //TODO remove that
                     } catch (\Throwable $e) {
                         continue;
                     }
