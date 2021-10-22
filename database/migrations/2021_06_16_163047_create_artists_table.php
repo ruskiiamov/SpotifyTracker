@@ -17,7 +17,7 @@ class CreateArtistsTable extends Migration
             $table->id();
             $table->string('spotify_id')->unique();
             $table->string('name');
-            $table->dateTime('checked_at')->nullable();
+            $table->dateTime('checked_at')->default('1000-01-01 00:00:00');
             $table->timestamps();
         });
     }
