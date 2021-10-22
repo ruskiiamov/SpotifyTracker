@@ -2,6 +2,7 @@
 
 return [
     'releaseAge' => 14, //days
+    'checkAge' => 6, //hours
 
     'genreCategories' => [
         //genre category => key words
