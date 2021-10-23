@@ -3,10 +3,13 @@
 namespace App\Console\Commands;
 
 use App\Services\Tasks;
+use App\Traits\ConsoleReport;
 use Illuminate\Console\Command;
 
 class AddFollowedAlbums extends Command
 {
+    use ConsoleReport;
+
     /**
      * The name and signature of the console command.
      *
@@ -39,9 +42,11 @@ class AddFollowedAlbums extends Command
     {
         $this->line('Adding...');
         $startTime = time();
-        (new Tasks())->addFollowedAlbums();
+        $report = (new Tasks())->addFollowedAlbums();
         $endTime = time();
         $duration = $endTime - $startTime;
-        $this->info('Success: New albums from followed artists added | time: ' . $duration . ' seconds');
+        $this->info('Success: New albums from followed artists added');
+        $this->info('Time: ' . $duration . ' seconds');
+        $this->showReport($report);
     }
 }

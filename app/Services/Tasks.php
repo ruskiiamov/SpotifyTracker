@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Config;
 class Tasks
 {
     private $releaseAge;
+    private $checkAge;
     private $genreCategories;
     private $exceptions;
     private $artistIdExceptions;
@@ -24,6 +25,7 @@ class Tasks
     public function __construct()
     {
         $this->releaseAge = Config::get('spotifyConfig.releaseAge');
+        $this->checkAge = Config::get('spotifyConfig.checkAge');
         $this->genreCategories = Config::get('spotifyConfig.genreCategories');
         $this->exceptions = Config::get('spotifyConfig.exceptions');
         $this->artistIdExceptions = Config::get('spotifyConfig.artistIdExceptions');
@@ -121,52 +123,69 @@ class Tasks
         return $report;
     }
 
-    public function addFollowedAlbums()
+    /**
+     * Add new albums for followed artists
+     *
+     * @return array
+     */
+    public function addFollowedAlbums(): array
     {
+        $report = [
+            'analysed_artists' => 0,
+            'added_albums' => 0,
+            'error_messages' => [],
+        ];
+
         $refreshToken = User::first()->refresh_token;
         $accessToken = Spotify::getRefreshedAccessToken($refreshToken);
 
-        Artist::chunk(200, function ($artists) use ($accessToken) { // TODO get only artists with followings and relevant checked_at straight from the DB
-            $releaseDateThreshold = $this->getReleaseDateThreshold();
-            foreach ($artists as $artist) {
-                if (is_null($artist->followings->first())) { // TODO remove that check
-                    continue;
-                }
-                $result = Spotify::getLastArtistAlbum($accessToken, $artist->spotify_id);
-                try {
-                    $albums = $result->items;
-                } catch (\Throwable $e) {
-                    continue;
-                }
-                foreach ($albums as $album) {
-                    if ($album->release_date_precision == 'day' && $album->release_date >= $releaseDateThreshold) { // TODO think about simplifying that code without flag
-                        $flag = false;
-                        foreach ($this->exceptions as $exception) {
-                            if (str_contains(strtolower($album->name), $exception)) {
-                                $flag = true;
-                                break;
-                            }
-                        }
-                        if ($flag) {continue;}
-                        $albumSpotifyId = $album->id;
-                        //$newAlbum = Album::where('spotify_id', $albumSpotifyId);
+        $checkThreshold = $this->getCheckDateTimeThreshold();
 
-                        $fullAlbum = Spotify::getAlbum($accessToken, $albumSpotifyId);
-                        Album::firstOrCreate(
-                            ['spotify_id' => $albumSpotifyId],
-                            [
+        Artist::has('followings')->where('checked_at', '<', $checkThreshold)
+            ->chunkById(200, function ($artists) use ($accessToken, &$report) {
+                $releaseDateThreshold = $this->getReleaseDateThreshold();
+                foreach ($artists as $artist) {
+                    $report['analysed_artists']++;
+                    try {
+                        $lastAlbum = Spotify::getLastArtistAlbum($accessToken, $artist->spotify_id)->items[0];
+                        echo $artist->name . ': ' . $lastAlbum->name . ' - ' . $lastAlbum->release_date, "\n";
+                        $artist->checked_at = date('Y-m-d H:i:s');
+                        $artist->save();
+                        if ($lastAlbum->release_date_precision !== 'day' || $lastAlbum->release_date < $releaseDateThreshold) {
+                            continue;
+                        }
+
+                        $albumNameWords = explode(' ', mb_strtolower($lastAlbum->name));
+                        if (array_intersect($albumNameWords, $this->exceptions)) {
+                            continue;
+                        }
+
+                        $albumSpotifyId = $lastAlbum->id;
+                        $newAlbum = Album::where('spotify_id', $albumSpotifyId)->first();
+                        if (!isset($newAlbum)) {echo "<<<BINGO>>>\n\n";
+                            $fullAlbum = Spotify::getAlbum($accessToken, $albumSpotifyId);
+                            $newAlbum = new Album();
+                            $newAlbum->fill([
+                                'spotify_id' => $albumSpotifyId,
                                 'name' => $fullAlbum->name,
                                 'release_date' => $fullAlbum->release_date,
                                 'artist_id' => $artist->id,
                                 'markets' => json_encode($fullAlbum->available_markets, JSON_UNESCAPED_UNICODE),
                                 'image' => $fullAlbum->images[1]->url,
                                 'popularity' => $fullAlbum->popularity,
-                            ]
-                        ); // TODO add genres check for that artist
+                            ])->save();
+                            $report['added_albums']++;
+
+                            $fullArtist = Spotify::getArtist($accessToken, $artist->spotify_id);
+                            $this->updateConnections($artist, $fullArtist->genres);
+                        }
+                    } catch (\Exception $e) {
+                        $report['error_messages'][] = $artist->name . ': ' . $e->getMessage();
+                        continue;
                     }
                 }
-            }
-        });
+            });
+        return $report;
     }
 
     private function updateConnections(Artist $artist, $genres)
@@ -200,6 +219,11 @@ class Tasks
     private function getReleaseDateThreshold()
     {
         return date('Y-m-d', time() - $this->releaseAge * 24 * 60 * 60);
+    }
+
+    private function getCheckDateTimeThreshold()
+    {
+        return date('Y-m-d H:i:s', time() - $this->checkAge * 60 * 60);
     }
 
     public function genresAnalyse()
