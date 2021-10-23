@@ -143,30 +143,24 @@ class Tasks
 
         Artist::has('followings')->where('checked_at', '<', $checkThreshold)
             ->chunkById(200, function ($artists) use ($accessToken, &$report) {
-                $releaseDateThreshold = $this->getReleaseDateThreshold();
                 foreach ($artists as $artist) {
                     $report['analysed_artists']++;
                     try {
-                        $lastAlbum = Spotify::getLastArtistAlbum($accessToken, $artist->spotify_id)->items[0];
-                        echo $artist->name . ': ' . $lastAlbum->name . ' - ' . $lastAlbum->release_date, "\n";
+                        $lastAlbum = $this->getLastAlbum($accessToken, $artist->spotify_id);
+
                         $artist->checked_at = date('Y-m-d H:i:s');
                         $artist->save();
-                        if ($lastAlbum->release_date_precision !== 'day' || $lastAlbum->release_date < $releaseDateThreshold) {
+
+                        if (!$this->isReleaseDateOk($lastAlbum) || !$this->isAlbumNameOk($lastAlbum->name)) {
                             continue;
                         }
 
-                        $albumNameWords = explode(' ', mb_strtolower($lastAlbum->name));
-                        if (array_intersect($albumNameWords, $this->exceptions)) {
-                            continue;
-                        }
-
-                        $albumSpotifyId = $lastAlbum->id;
-                        $newAlbum = Album::where('spotify_id', $albumSpotifyId)->first();
-                        if (!isset($newAlbum)) {echo "<<<BINGO>>>\n\n";
-                            $fullAlbum = Spotify::getAlbum($accessToken, $albumSpotifyId);
+                        $newAlbum = Album::where('spotify_id', $lastAlbum->id)->first();
+                        if (!isset($newAlbum)) {
+                            $fullAlbum = Spotify::getAlbum($accessToken, $lastAlbum->id);
                             $newAlbum = new Album();
                             $newAlbum->fill([
-                                'spotify_id' => $albumSpotifyId,
+                                'spotify_id' => $lastAlbum->id,
                                 'name' => $fullAlbum->name,
                                 'release_date' => $fullAlbum->release_date,
                                 'artist_id' => $artist->id,
@@ -186,6 +180,24 @@ class Tasks
                 }
             });
         return $report;
+    }
+
+    private function getLastAlbum($accessToken, $spotifyId)
+    {
+        $result = Spotify::getLastArtistAlbum($accessToken, $spotifyId);
+        $counter = 0;
+        while ($result === null && $counter < 2) {
+            sleep(0.3);
+            $result = Spotify::getLastArtistAlbum($accessToken, $spotifyId);
+            $counter++;
+        }
+        return $result->items[0];
+    }
+
+    private function isReleaseDateOk($lastAlbum)
+    {
+        $releaseDateThreshold = $this->getReleaseDateThreshold();
+        return ($lastAlbum->release_date_precision === 'day' && $lastAlbum->release_date > $releaseDateThreshold);
     }
 
     private function updateConnections(Artist $artist, $genres)
@@ -300,7 +312,14 @@ class Tasks
         });
     }
 
-    private function isAlbumNameOk($albumName)
+    /**
+     *
+     * Check album name for banned words: live, deluxe, etc
+     *
+     * @param string $albumName
+     * @return bool
+     */
+    private function isAlbumNameOk(string $albumName): bool
     {
         foreach ($this->exceptions as $exception) {
             if (str_contains(strtolower($albumName), $exception)) {
