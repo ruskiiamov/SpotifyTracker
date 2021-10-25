@@ -47,6 +47,6 @@ class UpdateFollowedArtists extends Command
         $duration = $endTime - $startTime;
         $this->info('Success: Followed artists updated');
         $this->info('Time: ' . $duration . ' seconds');
-        $this->showReport($report);
+        $this->showReport($report->getReport());
     }
 }

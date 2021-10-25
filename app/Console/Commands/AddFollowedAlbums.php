@@ -47,6 +47,6 @@ class AddFollowedAlbums extends Command
         $duration = $endTime - $startTime;
         $this->info('Success: New albums from followed artists added');
         $this->info('Time: ' . $duration . ' seconds');
-        $this->showReport($report);
+        $this->showReport($report->getReport());
     }
 }

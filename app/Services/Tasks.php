@@ -13,6 +13,7 @@ use App\Models\Genre;
 use App\Models\User;
 use App\Facades\Spotify;
 use Illuminate\Support\Facades\Config;
+use stdClass;
 
 class Tasks
 {
@@ -34,89 +35,74 @@ class Tasks
     /**
      * Update followed artists for all users
      *
-     * @return array
+     * @return Report
      */
-    public function updateFollowedArtists(): array
+    public function updateFollowedArtists(): Report
     {
-        $report = [
-            'analysed_artists' => 0,
-            'analysed_users' => 0,
-            'created_artists' => 0,
-            'created_followings' => 0,
-            'deleted_followings' => 0,
-            'error_messages' => [],
-        ];
+        $report = new Report(
+            'analysed_artists',
+            'analysed_users',
+            'created_artists',
+            'created_followings',
+            'deleted_followings'
+        );
 
         User::chunk(200, function ($users) use (&$report){
             foreach ($users as $user) {
-                $report['analysed_users']++;
-
                 try {
-                    $refreshToken = $user->refresh_token;
-                    $accessToken = Spotify::getRefreshedAccessToken($refreshToken);
-                } catch (\Exception $e) {
-                    $report['error_messages'][] = $e->getMessage();
-                    continue;
-                }
-
-                $after = null;
-                $actualArtistsIdList = [];
-                do {
-                    try {
+                    $report->analysed_users();
+                    $accessToken = $this->getUserAccessToken($user);
+                    $after = null;
+                    $actualArtistsIdList = [];
+                    do {
                         $result = Spotify::getFollowedArtists($accessToken, $after);
                         $artists = $result->artists->items;
                         $after = $result->artists->cursors->after;
-                    } catch (\Exception $e) {
-                        $report['error_messages'][] = $e->getMessage();
-                        break;
-                    }
-                    foreach ($artists as $item) {
-                        $report['analysed_artists']++;
-                        try {
-                            $artistId = $item->id;
-                            $actualArtistsIdList[] = $artistId;
-                            $artist = Artist::where('spotify_id', $artistId)->first();
-                            if (!isset($artist)) {
-                                $artist = new Artist();
-                                $artist->fill([
-                                    'spotify_id' => $artistId,
-                                    'name' => $item->name,
-                                ])->save();
-                                $report['created_artists']++;
+                        foreach ($artists as $item) {
+                            $report->analysed_artists();
+                            try {
+                                $artistId = $item->id;
+                                $actualArtistsIdList[] = $artistId;
+                                $artist = Artist::where('spotify_id', $artistId)->first();
+                                if (!isset($artist)) {
+                                    $artist = new Artist();
+                                    $artist->fill([
+                                        'spotify_id' => $artistId,
+                                        'name' => $item->name,
+                                    ])->save();
+                                    $report->created_artists();
+                                }
+                                $following = Following::where('user_id', $user->id)
+                                    ->where('artist_id', $artist->id)->first();
+                                if (!isset($following)) {
+                                    $following = new Following();
+                                    $following->fill([
+                                        'user_id' => $user->id,
+                                        'artist_id' => $artist->id,
+                                    ])->save();
+                                    $report->created_followings();
+                                }
+                            } catch (\Exception $e) {
+                                $report->setErrorMessage($item->name . ': ' . $e->getMessage());
+                                continue;
                             }
-                            $following = Following::where('user_id', $user->id)
-                                ->where('artist_id', $artist->id)->first();
-                            if (!isset($following)) {
-                                $following = new Following();
-                                $following->fill([
-                                    'user_id' => $user->id,
-                                    'artist_id' => $artist->id,
-                                ])->save();
-                                $report['created_followings']++;
+                        }
+                    } while ($after);
+                    $followings = $user->followings;
+                    foreach ($followings as $following) {
+                        try {
+                            if (!in_array($following->artist->spotify_id, $actualArtistsIdList)) {
+                                $following->delete();
+                                $report->deleted_followings();
                             }
                         } catch (\Exception $e) {
-                            $report['error_messages'][] = $e->getMessage();
+                            $report->setErrorMessage($user->email . ': ' . $e->getMessage());
                             continue;
                         }
                     }
-                } while ($after);
-
-                try {
-                    $followings = $user->followings;
                 } catch (\Exception $e) {
-                    $report['error_messages'][] = $e->getMessage();
+                    $report->setErrorMessage($user->email . ': ' . $e->getMessage());
                     continue;
-                }
-                foreach ($followings as $following) {
-                    try {
-                        if (!in_array($following->artist->spotify_id, $actualArtistsIdList)) {
-                            $following->delete();
-                            $report['deleted_followings']++;
-                        }
-                    } catch (\Exception $e) {
-                        $report['error_messages'][] = $e->getMessage();
-                        continue;
-                    }
                 }
             }
         });
@@ -126,25 +112,18 @@ class Tasks
     /**
      * Add new albums for followed artists
      *
-     * @return array
+     * @return Report
      */
-    public function addFollowedAlbums(): array
+    public function addFollowedAlbums(): Report
     {
-        $report = [
-            'analysed_artists' => 0,
-            'added_albums' => 0,
-            'error_messages' => [],
-        ];
-
-        $refreshToken = User::first()->refresh_token;
-        $accessToken = Spotify::getRefreshedAccessToken($refreshToken);
-
+        $report = new Report('analysed_artists', 'added_albums');
+        $accessToken = $this->getAccessToken();
         $checkThreshold = $this->getCheckDateTimeThreshold();
 
         Artist::has('followings')->where('checked_at', '<', $checkThreshold)
             ->chunkById(200, function ($artists) use ($accessToken, &$report) {
                 foreach ($artists as $artist) {
-                    $report['analysed_artists']++;
+                    $report->analysed_artists();
                     try {
                         $lastAlbum = $this->getLastAlbum($accessToken, $artist->spotify_id);
 
@@ -168,13 +147,13 @@ class Tasks
                                 'image' => $fullAlbum->images[1]->url,
                                 'popularity' => $fullAlbum->popularity,
                             ])->save();
-                            $report['added_albums']++;
+                            $report->added_albums();
 
                             $fullArtist = Spotify::getArtist($accessToken, $artist->spotify_id);
                             $this->updateConnections($artist, $fullArtist->genres);
                         }
                     } catch (\Exception $e) {
-                        $report['error_messages'][] = $artist->name . ': ' . $e->getMessage();
+                        $report->setErrorMessage($artist->name . ': ' . $e->getMessage());
                         continue;
                     }
                 }
@@ -182,7 +161,37 @@ class Tasks
         return $report;
     }
 
-    private function getLastAlbum($accessToken, $spotifyId)
+    public function clearAlbums()
+    {
+        $refreshToken = User::first()->refresh_token;
+        $accessToken = Spotify::getRefreshedAccessToken($refreshToken);
+
+        Album::chunk(200, function ($albums) use ($accessToken) {
+            $releaseDateThreshold = $this->getReleaseDateThreshold();
+            foreach ($albums as $album) {
+                if ($album->release_date < $releaseDateThreshold) {
+                    $album->delete();
+                } else {
+                    $albumSpotifyId = $album->spotify_id;
+                    $fullAlbum = Spotify::getAlbum($accessToken, $albumSpotifyId);
+                    $popularity = $fullAlbum->popularity;
+                    if ($popularity != $album->popularity) {
+                        $album->popularity = $popularity;
+                        $album->save();
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Get artist last album (3 attempts)
+     *
+     * @param string $accessToken
+     * @param string $spotifyId
+     * @return stdClass
+     */
+    private function getLastAlbum(string $accessToken,string $spotifyId): stdClass
     {
         $result = Spotify::getLastArtistAlbum($accessToken, $spotifyId);
         $counter = 0;
@@ -193,6 +202,7 @@ class Tasks
         }
         return $result->items[0];
     }
+
 
     private function isReleaseDateOk($lastAlbum)
     {
@@ -270,29 +280,6 @@ class Tasks
             }
         }
         return 'other';
-    }
-
-    public function clearAlbums()
-    {
-        $refreshToken = User::first()->refresh_token;
-        $accessToken = Spotify::getRefreshedAccessToken($refreshToken);
-
-        Album::chunk(200, function ($albums) use ($accessToken) {
-            $releaseDateThreshold = $this->getReleaseDateThreshold();
-            foreach ($albums as $album) {
-                if ($album->release_date < $releaseDateThreshold) {
-                    $album->delete();
-                } else {
-                    $albumSpotifyId = $album->spotify_id;
-                    $fullAlbum = Spotify::getAlbum($accessToken, $albumSpotifyId);
-                    $popularity = $fullAlbum->popularity;
-                    if ($popularity != $album->popularity) {
-                        $album->popularity = $popularity;
-                        $album->save();
-                    }
-                }
-            }
-        });
     }
 
     public function clearArtists()
@@ -395,6 +382,30 @@ class Tasks
             }
         }
         return false;
+    }
+
+    /**
+     * Get access token for specified user
+     *
+     * @param User $user
+     * @return string
+     */
+    private function getUserAccessToken(User $user): string
+    {
+        $refreshToken = $user->refresh_token;
+        $accessToken = Spotify::getRefreshedAccessToken($refreshToken);
+        return $accessToken;
+    }
+
+    /**
+     * Get access token for random user
+     *
+     * @return string
+     */
+    private function getAccessToken(): string
+    {
+        $refreshToken = User::first()->refresh_token;
+        return Spotify::getRefreshedAccessToken($refreshToken);
     }
 
 }
