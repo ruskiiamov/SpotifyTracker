@@ -3,23 +3,26 @@
 namespace App\Console\Commands;
 
 use App\Services\Tasks;
+use App\Traits\ConsoleReport;
 use Illuminate\Console\Command;
 
-class ClearAlbums extends Command
+class UpdateAlbums extends Command
 {
+    use ConsoleReport;
+
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'spotify:clear-albums';
+    protected $signature = 'spotify:update-albums';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Delete obsolete albums';
+    protected $description = 'Update albums popularity abd delete obsolete albums';
 
     /**
      * Create a new command instance.
@@ -37,11 +40,13 @@ class ClearAlbums extends Command
      */
     public function handle()
     {
-        $this->line('Clearing...');
+        $this->line('Updating...');
         $startTime = time();
-        (new Tasks())->clearAlbums();
+        $report = (new Tasks())->updateAlbums();
         $endTime = time();
         $duration = $endTime - $startTime;
-        $this->info('Success: Albums table cleared | time: ' . $duration . ' seconds');
+        $this->info('Success: Albums table updated');
+        $this->info('Time: ' . $duration . ' seconds');
+        $this->showReport($report->getReport());
     }
 }

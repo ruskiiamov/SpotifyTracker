@@ -161,27 +161,39 @@ class Tasks
         return $report;
     }
 
-    public function clearAlbums()
+    /**
+     * Update albums popularity and delete obsolete albums
+     *
+     * @return Report
+     */
+    public function updateAlbums(): Report
     {
-        $refreshToken = User::first()->refresh_token;
-        $accessToken = Spotify::getRefreshedAccessToken($refreshToken);
-
-        Album::chunk(200, function ($albums) use ($accessToken) {
+        $report = new Report('deleted_albums', 'updated_albums');
+        $accessToken = $this->getAccessToken();
+        Album::chunk(200, function ($albums) use ($accessToken, &$report) {
             $releaseDateThreshold = $this->getReleaseDateThreshold();
             foreach ($albums as $album) {
-                if ($album->release_date < $releaseDateThreshold) {
-                    $album->delete();
-                } else {
-                    $albumSpotifyId = $album->spotify_id;
-                    $fullAlbum = Spotify::getAlbum($accessToken, $albumSpotifyId);
-                    $popularity = $fullAlbum->popularity;
-                    if ($popularity != $album->popularity) {
-                        $album->popularity = $popularity;
-                        $album->save();
+                try {
+                    if ($album->release_date < $releaseDateThreshold) {
+                        $album->delete();
+                        $report->deleted_albums();
+                    } else {
+                        $albumSpotifyId = $album->spotify_id;
+                        $fullAlbum = Spotify::getAlbum($accessToken, $albumSpotifyId);
+                        $popularity = $fullAlbum->popularity;
+                        if ($popularity != $album->popularity) {
+                            $album->popularity = $popularity;
+                            $album->save();
+                            $report->updated_albums();
+                        }
                     }
+                } catch (\Exception $e) {
+                    $report->setErrorMessage('id=' . $album->id . ' ' . $album->name . ': ' . $e->getMessage());
+                    continue;
                 }
             }
         });
+        return $report;
     }
 
     /**
