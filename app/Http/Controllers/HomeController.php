@@ -35,13 +35,10 @@ class HomeController extends Controller
                 if (!in_array($country, $markets)) {
                     continue;
                 }
-                $newReleases[$album->release_date][$album->popularity] = $album;
+                $newReleases[$album->release_date][] = $album;
             }
         }
         krsort($newReleases);
-        foreach ($newReleases as $item) {
-            krsort($item);
-        }
         $title = 'followed artists';
         return view('albums', ['newReleases' => $newReleases, 'title' => $title]);
     }
