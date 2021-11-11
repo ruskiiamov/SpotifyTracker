@@ -202,25 +202,12 @@ class Tasks
     public function clearArtists(): Report
     {
         $report = new Report('deleted_artists');
-        Artist::chunk(200, function ($artists) use (&$report) {
-            foreach ($artists as $artist) {
-                try {
-                    $following = $artist->followings->first();
-                    $album = $artist->albums->first();
-                    if (is_null($following) && is_null($album)) {
-                        $connections = $artist->connections;
-                        foreach ($connections as $connection) {
-                            $connection->delete();
-                        }
-                        $artist->delete();
-                        $report->deleted_artists();
-                    }
-                } catch (\Exception $e) {
-                    $report->setErrorMessage($artist->name . ': ' . $e->getMessage());
-                    continue;
-                }
-            }
-        });
+        try {
+            $deletedArtists = Artist::doesntHave('followings')->doesntHave('albums')->delete();
+            $report->setValue('deleted_artists', $deletedArtists);
+        } catch (\Exception $e) {
+            $report->setErrorMessage($e->getMessage());
+        }
         return $report;
     }
 
