@@ -15,8 +15,12 @@ class CreateConnectionsTable extends Migration
     {
         Schema::create('connections', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('artist_id')->constrained('artists');
-            $table->foreignId('genre_id')->constrained('genres');
+            $table->foreignId('artist_id')
+                ->constrained('artists')
+                ->onDelete('cascade');
+            $table->foreignId('genre_id')
+                ->constrained('genres')
+                ->onDelete('cascade');
             $table->timestamps();
         });
     }

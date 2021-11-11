@@ -15,8 +15,12 @@ class CreateFollowingsTable extends Migration
     {
         Schema::create('followings', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users');
-            $table->foreignId('artist_id')->constrained('artists');
+            $table->foreignId('user_id')
+                ->constrained('users')
+                ->onDelete('cascade');
+            $table->foreignId('artist_id')
+                ->constrained('artists')
+                ->onDelete('cascade');
             $table->timestamps();
         });
     }

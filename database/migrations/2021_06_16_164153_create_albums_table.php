@@ -18,7 +18,9 @@ class CreateAlbumsTable extends Migration
             $table->string('spotify_id')->unique();
             $table->string('name');
             $table->date('release_date');
-            $table->foreignId('artist_id')->constrained('artists');
+            $table->foreignId('artist_id')
+                ->constrained('artists')
+                ->onDelete('cascade');
             $table->json('markets');
             $table->string('image');
             $table->integer('popularity');
