@@ -102,8 +102,6 @@ class Tasks
     }
 
     /**
-     * Add new albums for followed artists
-     *
      * @return Report
      */
     public function addFollowedAlbums(): Report
@@ -126,8 +124,7 @@ class Tasks
                             continue;
                         }
 
-                        $newAlbum = Album::where('spotify_id', $lastAlbum->id)->first();
-                        if (!isset($newAlbum)) {
+                        if (Album::where('spotify_id', $lastAlbum->id)->doesntExist()) {
                             $fullAlbum = Spotify::getAlbum($accessToken, $lastAlbum->id);
                             $newAlbum = new Album();
                             $newAlbum->fill([
