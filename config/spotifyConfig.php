@@ -29,7 +29,7 @@ return [
     ],
 
     'exceptions' => ['live', 'remix', 'anniversary', 'deluxe', 'expanded', 'instrumentals',
-        'best', 'soundtrack', 'demos'],
+        'best', 'soundtrack', 'demos', 'edition', 'remastered'],
 
     'artistIdExceptions' => [
         '5aIqB5nVVvmFsvSdExz408', //Johann Sebastian Bach

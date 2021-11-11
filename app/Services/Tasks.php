@@ -151,8 +151,6 @@ class Tasks
     }
 
     /**
-     * Update albums popularity and delete obsolete albums
-     *
      * @return Report
      */
     public function updateAlbums(): Report
@@ -203,57 +201,73 @@ class Tasks
     /**
      * @return Report
      */
-    public function addNewReleases(): Report //TODO - this method should be reworked and optimized !!!
+    public function addNewReleases(): Report
     {
-        $report = new Report();
-        $refreshToken = User::first()->refresh_token;
-        $accessToken = Spotify::getRefreshedAccessToken($refreshToken);
+        $report = new Report('analysed_albums', 'created_artists', 'added_albums');
+        $accessToken = $this->getAccessToken();
 
         $offset = null;
         do {
             $result = Spotify::getNewReleases($accessToken, $offset);
             $offset = $offset + 50;
-            $albums = $result->albums->items;
+            try {
+                $albums = $result->albums->items;
+            } catch (Exception $e) {
+                $report->setErrorMessage($e->getMessage());
+                continue;
+            }
             foreach ($albums as $album) {
-                if ($album->release_date_precision == 'day' && $album->album_type == 'album' && $this->isAlbumNameOk($album->name)) {
+                try {
+                    $report->analysed_albums();
+
+                    if ($album->album_type !== 'album') {
+                        continue;
+                    }
+
+                    if (!$this->isReleaseDateOk($album) || !$this->isAlbumNameOk($album->name)) {
+                        continue;
+                    }
+
                     $artistSpotifyId = $album->artists[0]->id;
                     if (in_array($artistSpotifyId, $this->artistIdExceptions)) {
                         continue;
                     }
-                    $fullArtist = Spotify::getArtist($accessToken, $artistSpotifyId);
-                    try {
-                        $this->addGenres($fullArtist->genres); //TODO remove that
-                    } catch (\Throwable $e) {
-                        continue;
-                    }
-                    if (!$this->isGenreSubscribed($fullArtist->genres)) {
+
+                    if (Album::where('spotify_id', $album->id)->exists()) {
                         continue;
                     }
 
-                    $artist = Artist::firstOrCreate(
-                        ['spotify_id' => $fullArtist->id],
-                        ['name' => $fullArtist->name]
-                    );
+                    $fullArtist = Spotify::getArtist($accessToken, $artistSpotifyId);
+
+                    $artist = Artist::where('spotify_id', $fullArtist->id)->first();
+                    if (!isset($artist)) {
+                        $artist = new Artist();
+                        $artist->fill([
+                            'spotify_id' => $fullArtist->id,
+                            'name' => $fullArtist->name,
+                        ])->save();
+                        $report->created_artists();
+                    }
+
                     $this->updateConnections($artist, $fullArtist->genres);
 
                     $albumSpotifyId = $album->id;
                     $fullAlbum = Spotify::getAlbum($accessToken, $albumSpotifyId);
 
-                    try {
-                        Album::firstOrCreate(
-                            ['spotify_id' => $albumSpotifyId],
-                            [
-                                'name' => $fullAlbum->name,
-                                'release_date' => $fullAlbum->release_date,
-                                'artist_id' => $artist->id,
-                                'markets' => json_encode($fullAlbum->available_markets, JSON_UNESCAPED_UNICODE),
-                                'image' => $fullAlbum->images[1]->url,
-                                'popularity' => $fullAlbum->popularity,
-                            ]
-                        );
-                    } catch (\Throwable $e) {
-                        continue;
-                    }
+                    $newAlbum = new Album();
+                    $newAlbum->fill([
+                        'spotify_id' => $albumSpotifyId,
+                        'name' => $fullAlbum->name,
+                        'release_date' => $fullAlbum->release_date,
+                        'artist_id' => $artist->id,
+                        'markets' => json_encode($fullAlbum->available_markets, JSON_UNESCAPED_UNICODE),
+                        'image' => $fullAlbum->images[1]->url,
+                        'popularity' => $fullAlbum->popularity,
+                    ])->save();
+                    $report->added_albums();
+                } catch (Exception $e) {
+                    $report->setErrorMessage('id=' . $album->id . ' ' . $album->name . ': ' . $e->getMessage());
+                    continue;
                 }
             }
         } while ($offset <= 950);
@@ -295,7 +309,7 @@ class Tasks
         $result = Spotify::getLastArtistAlbum($accessToken, $spotifyId);
         $counter = 0;
         while ($result === null && $counter < 2) {
-            sleep(0.3);
+            sleep(0.2);
             $result = Spotify::getLastArtistAlbum($accessToken, $spotifyId);
             $counter++;
         }
@@ -338,19 +352,6 @@ class Tasks
     }
 
     /**
-     * @param $genres
-     */
-    private function addGenres($genres): void //TODO shift that code to updateConnections method
-    {
-        foreach ($genres as $genre) {
-            Genre::firstOrCreate(
-                ['name' => $genre],
-                ['category_id' => Category::where('name', $this->setGenreCategory($genre))->first()->id],
-            );
-        }
-    }
-
-    /**
      * @return string
      */
     private function getReleaseDateThreshold(): string
@@ -367,10 +368,10 @@ class Tasks
     }
 
     /**
-     * @param $genre
+     * @param string $genre
      * @return string
      */
-    private function setGenreCategory($genre): string
+    private function setGenreCategory(string $genre): string
     {
         foreach ($this->genreCategories as $genreCategory => $keyWords) {
             foreach ($keyWords as $keyWord) {
@@ -394,23 +395,6 @@ class Tasks
             }
         }
         return true;
-    }
-
-    /**
-     * @param $genreNames
-     * @return bool
-     */
-    private function isGenreSubscribed($genreNames): bool
-    {
-        foreach ($genreNames as $genreName) {
-            $genre = Genre::where('name', $genreName)->first();
-            $category = $genre->category;
-            $subscription = $category->subscriptions->first();
-            if (!is_null($subscription)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**

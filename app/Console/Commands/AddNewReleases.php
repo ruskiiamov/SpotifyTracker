@@ -3,10 +3,13 @@
 namespace App\Console\Commands;
 
 use App\Services\Tasks;
+use App\Traits\ConsoleReport;
 use Illuminate\Console\Command;
 
 class AddNewReleases extends Command
 {
+    use ConsoleReport;
+
     /**
      * The name and signature of the console command.
      *
@@ -40,9 +43,11 @@ class AddNewReleases extends Command
     {
         $this->line('Adding...');
         $startTime = time();
-        (new Tasks())->addNewReleases();
+        $report = (new Tasks())->addNewReleases();
         $endTime = time();
         $duration = $endTime - $startTime;
-        $this->info('Success: New releases added | time: ' . $duration . ' seconds');
+        $this->info('Success: New releases added');
+        $this->info('Time: ' . $duration . ' seconds');
+        $this->showReport($report->getReport());
     }
 }
