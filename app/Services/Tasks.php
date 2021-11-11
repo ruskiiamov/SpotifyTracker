@@ -8,10 +8,10 @@ use App\Models\Album;
 use App\Models\Artist;
 use App\Models\Category;
 use App\Models\Connection;
-use App\Models\Following;
 use App\Models\Genre;
 use App\Models\User;
 use App\Facades\Spotify;
+use Exception;
 use Illuminate\Support\Facades\Config;
 use stdClass;
 
@@ -33,8 +33,6 @@ class Tasks
     }
 
     /**
-     * Update followed artists for all users
-     *
      * @return Report
      */
     public function updateFollowedArtists(): Report
@@ -72,35 +70,29 @@ class Tasks
                                     ])->save();
                                     $report->created_artists();
                                 }
-                                $following = Following::where('user_id', $user->id)
-                                    ->where('artist_id', $artist->id)->first();
-                                if (!isset($following)) {
-                                    $following = new Following();
-                                    $following->fill([
-                                        'user_id' => $user->id,
-                                        'artist_id' => $artist->id,
-                                    ])->save();
+                                if ($user->artists()->where('artist_id', $artist->id)->doesntExist()) {
+                                    $user->artists()->attach($artist->id);
                                     $report->created_followings();
                                 }
-                            } catch (\Exception $e) {
+                            } catch (Exception $e) {
                                 $report->setErrorMessage($item->name . ': ' . $e->getMessage());
                                 continue;
                             }
                         }
                     } while ($after);
-                    $followings = $user->followings;
-                    foreach ($followings as $following) {
+                    $userArtists = $user->artists;
+                    foreach ($userArtists as $userArtist) {
                         try {
-                            if (!in_array($following->artist->spotify_id, $actualArtistsIdList)) {
-                                $following->delete();
+                            if (!in_array($userArtist->spotify_id, $actualArtistsIdList)) {
+                                $user->artists()->detach($userArtist->id);
                                 $report->deleted_followings();
                             }
-                        } catch (\Exception $e) {
+                        } catch (Exception $e) {
                             $report->setErrorMessage($user->email . ': ' . $e->getMessage());
                             continue;
                         }
                     }
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     $report->setErrorMessage($user->email . ': ' . $e->getMessage());
                     continue;
                 }
@@ -152,7 +144,7 @@ class Tasks
                             $fullArtist = Spotify::getArtist($accessToken, $artist->spotify_id);
                             $this->updateConnections($artist, $fullArtist->genres);
                         }
-                    } catch (\Exception $e) {
+                    } catch (Exception $e) {
                         $report->setErrorMessage($artist->name . ': ' . $e->getMessage());
                         continue;
                     }
@@ -187,7 +179,7 @@ class Tasks
                             $report->updated_albums();
                         }
                     }
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     $report->setErrorMessage('id=' . $album->id . ' ' . $album->name . ': ' . $e->getMessage());
                     continue;
                 }
@@ -205,7 +197,7 @@ class Tasks
         try {
             $deletedArtists = Artist::doesntHave('followings')->doesntHave('albums')->delete();
             $report->setValue('deleted_artists', $deletedArtists);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $report->setErrorMessage($e->getMessage());
         }
         return $report;
