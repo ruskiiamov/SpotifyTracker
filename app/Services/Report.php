@@ -42,6 +42,20 @@ class Report
     }
 
     /**
+     * @param $name
+     * @param $value
+     * @throws Exception
+     */
+    public function setValue($name, $value): void
+    {
+        if (isset($this->report[$name])) {
+            $this->report[$name] = $value;
+        } else {
+            throw new Exception("{$name} - not valid report field");
+        }
+    }
+
+    /**
      * Set new error message
      *
      * @param string $message
