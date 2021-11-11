@@ -314,22 +314,25 @@ class Tasks
 
     /**
      * @param Artist $artist
-     * @param $genres
+     * @param array $genreNames
      */
-    private function updateConnections(Artist $artist, $genres): void
+    private function updateConnections(Artist $artist, array $genreNames): void
     {
-        $this->addGenres($genres);
-        foreach ($genres as $genre) {
-            Connection::firstOrCreate([
-                'artist_id' => $artist->id,
-                'genre_id' => Genre::where('name', $genre)->first()->id,
-            ]);
+        $artistGenres = $artist->genres;
+        foreach ($artistGenres as $artistGenre) {
+            if (!in_array($artistGenre->name, $genreNames)) {
+                $artist->genres()->detach($artistGenre->id);
+            }
         }
 
-        $connections = $artist->connections;
-        foreach ($connections as $connection) {
-            if (!in_array($connection->genre->name, $genres)) {
-                $connection->delete();
+        foreach ($genreNames as $genreName) {
+            $genre = Genre::firstOrCreate(
+                ['name' => $genreName],
+                ['category_id' => Category::where('name', $this->setGenreCategory($genreName))->first()->id],
+            );
+
+            if ($artist->genres()->where('name', $genre)->doesntExist()) {
+                $artist->genres()->attach($genre->id);
             }
         }
     }
