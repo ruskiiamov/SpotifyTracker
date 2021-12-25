@@ -12,7 +12,7 @@ class CreateConnectionsTable extends Migration
      * @return void
      */
     public function up()
-    {
+    {//TODO change to user-genre_category link
         Schema::create('connections', function (Blueprint $table) {
             $table->id();
             $table->foreignId('artist_id')

@@ -18,4 +18,9 @@ class Genre extends Model
     {
         return $this->belongsTo(Category::class);
     }
+
+    public function artists()
+    {
+        return $this->belongsToMany(Artist::class, 'connections');
+    }
 }

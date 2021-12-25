@@ -198,12 +198,13 @@ class Spotify
         return $this->request('GET', $this->apiUrl . "/artists/{$artistId}?", [], $headers);
     }
 
-    public function getNewReleases($accessToken, $offset = null)
+    public function getNewReleases($accessToken, $option = 'new', $market = 'RU', $offset = null)
     {
         $parameters = [
-            'q' => 'tag:new',
+            'q' => 'tag:' . $option,
             'type' => 'album',
             'limit' => '50',
+            'market' => $market,
         ];
 
         if ($offset) {
@@ -213,5 +214,12 @@ class Spotify
         $headers = ['Authorization' => 'Bearer ' . $accessToken];
 
         return $this->request('GET', $this->apiUrl . '/search?', $parameters, $headers);
+    }
+
+    public function getMarkets($accessToken)
+    {
+        $headers = ['Authorization' => 'Bearer ' . $accessToken];
+
+        return $this->request('GET', $this->apiUrl . '/markets', [], $headers);
     }
 }

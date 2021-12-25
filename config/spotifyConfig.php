@@ -10,22 +10,23 @@ return [
             'merseybeat', 'dreamo', 'beatlesque', 'oshare kei'],
         'metal' => ['metal', 'thrash', 'djent', 'doom', 'sludge'],
         'hip hop' => ['hip hop', 'rap', 'boom bap'],
-        'punk' => ['punk', 'hardcore', 'emo', 'oi', 'crust', 'screamo', 'nyhc', 'easycore',
+        'punk' => ['punk', 'hardcore', 'emo', 'crust', 'screamo', 'nyhc', 'easycore',
             'orgcore'],
         'pop' => ['pop', 'otacore'],
         'jazz' => ['jazz', 'bop'],
         'blues' => ['blues'],
         'funk' => ['funk', 'motown'],
         'soul/r&b' => ['soul', 'r&b'],
-        'classical' => ['classical', 'baroque', 'romantic', 'early', 'choral'],
-        'folk/country' => ['folk', 'country', 'bluegrass', 'americana', 'afrobeat'],
+        'classical' => ['classical', 'baroque', 'romantic', 'early', 'choral', 'tenor',
+            'post-minimalism', 'impressionism', 'operetta'],
+        'folk/country' => ['folk', 'country', 'bluegrass', 'americana', 'afrobeat', 'indigenous',
+            'tierra caliente', 'mexicano'],
         'reggae/ska' => ['reggae', 'ska'],
         'electronic' => ['electro', 'rave', 'downtempo', 'trip hop', 'breakbeat',
             'big beat', 'trance', 'dance', 'ambient', 'drill', 'house', 'edm', 'chill',
             'garage', 'beats', 'disco', 'dubstep', 'indietronica', 'synthwave', 'breakcore',
-            'nintendocore'],
+            'nintendocore', 'techno', 'drum and bass', 'phonk', 'hardstyle'],
         'latin' => ['latin'],
-        'other' => ['other'],
     ],
 
     'exceptions' => ['live', 'remix', 'anniversary', 'deluxe', 'expanded', 'instrumentals',
@@ -40,5 +41,9 @@ return [
         '3MKCzCnpzw3TjUYs2v7vDA', //Pyotr Ilyich Tchaikovsky
         '0Kekt6CKSo0m5mivKcoH51', //Sergei Rachmaninoff
         '2QOIawHpSlOwXDvSqQ9YJR', //Antonio Vivaldi
-    ]
+    ],
+
+    'markets' => [
+        'AU', 'CA', 'GB', 'IE', 'JP', 'NO', 'RU', 'SE', 'UA', 'US'
+    ],
 ];

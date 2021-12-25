@@ -22,6 +22,7 @@ class Tasks
     private $genreCategories;
     private $exceptions;
     private $artistIdExceptions;
+    private $markets;
 
     public function __construct()
     {
@@ -30,6 +31,7 @@ class Tasks
         $this->genreCategories = Config::get('spotifyConfig.genreCategories');
         $this->exceptions = Config::get('spotifyConfig.exceptions');
         $this->artistIdExceptions = Config::get('spotifyConfig.artistIdExceptions');
+        $this->markets = Config::get('spotifyConfig.markets');
     }
 
     /**
@@ -204,11 +206,31 @@ class Tasks
     public function addNewReleases(): Report
     {
         $report = new Report('analysed_albums', 'created_artists', 'added_albums');
+
+        foreach ($this->markets as $market) {
+            $report = $this->addReleases('new', $market, $report);
+        }
+
+        foreach ($this->markets as $market) {
+            $report = $this->addReleases('hipster', $market, $report);
+        }
+
+        return $report;
+    }
+
+    /**
+     * @param string $mode
+     * @param string $market
+     * @param Report $report
+     * @return Report
+     */
+    private function addReleases(string $mode, string $market, Report $report): Report
+    {
         $accessToken = $this->getAccessToken();
 
         $offset = null;
         do {
-            $result = Spotify::getNewReleases($accessToken, $offset);
+            $result = Spotify::getNewReleases($accessToken, $mode, $market, $offset);
             $offset = $offset + 50;
             try {
                 $albums = $result->albums->items;
@@ -266,7 +288,7 @@ class Tasks
                     ])->save();
                     $report->added_albums();
                 } catch (Exception $e) {
-                    $report->setErrorMessage('id=' . $album->id . ' ' . $album->name . ': ' . $e->getMessage());
+                    $report->setErrorMessage('id=' . ($album->id ?? '?') . ' ' . ($album->name ?? '?') . ': ' . $e->getMessage());
                     continue;
                 }
             }
