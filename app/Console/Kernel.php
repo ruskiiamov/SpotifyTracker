@@ -26,16 +26,11 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
-        $schedule->call(function () {
-            $user = new User();
-            $user->fill([
-                'name' => 'Test',
-                'email' => 'sometkkkeeewwwhing@mail.ru',
-                'country' => 'RU',
-                'refresh_token' => '12345667890qdekgk',
-            ])->save();
-        })->everyMinute();
+        $schedule->command('spotify:update-followed-artists')->everyTwoHours();
+        $schedule->command('spotify:add-followed-albums')->everyTwoHours();
+        $schedule->command('spotify:update-albums')->everyTwoHours();
+        $schedule->command('spotify:clear-artists')->everyTwoHours();
+        $schedule->command('spotify:add-new-releases')->everySixHours()->runInBackground();
     }
 
     /**
