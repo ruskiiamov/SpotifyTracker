@@ -175,8 +175,7 @@ return [
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
 
-        App\Providers\SpotifyServiceProvider::class,
-
+        App\Providers\SpotifyServiceProvider::class,//TODO remove
     ],
 
     /*
@@ -230,7 +229,7 @@ return [
         'Validator' => Illuminate\Support\Facades\Validator::class,
         'View' => Illuminate\Support\Facades\View::class,
 
-        'Spotify' => App\Facades\Spotify::class,
+        'Spotify' => App\Facades\Spotify::class,//TODO remove
 
     ],
 
