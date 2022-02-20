@@ -40,67 +40,15 @@ class Tasks
      */
     public function updateFollowedArtists(): Report
     {
-        $report = new Report(
-            'analysed_artists',
-            'analysed_users',
-            'created_artists',
-            'created_followings',
-            'deleted_followings'
-        );
+        $report = new Report('analysed_users');
 
         User::chunk(200, function ($users) use (&$report){
             foreach ($users as $user) {
-                try {
-                    $report->analysed_users();
-                    $accessToken = $this->getUserAccessToken($user);
-                    $after = null;
-                    $actualArtistsIdList = [];
-                    do {
-                        $result = Spotify::getFollowedArtists($accessToken, $after);
-                        $artists = $result->artists->items;
-                        $after = $result->artists->cursors->after;
-                        foreach ($artists as $item) {
-                            $report->analysed_artists();
-                            try {
-                                $artistId = $item->id;
-                                $actualArtistsIdList[] = $artistId;
-                                $artist = Artist::where('spotify_id', $artistId)->first();
-                                if (!isset($artist)) {
-                                    $artist = new Artist();
-                                    $artist->fill([
-                                        'spotify_id' => $artistId,
-                                        'name' => $item->name,
-                                    ])->save();
-                                    $report->created_artists();
-                                }
-                                if ($user->artists()->where('artist_id', $artist->id)->doesntExist()) {
-                                    $user->artists()->attach($artist->id);
-                                    $report->created_followings();
-                                }
-                            } catch (Exception $e) {
-                                $report->setErrorMessage($item->name . ': ' . $e->getMessage());
-                                continue;
-                            }
-                        }
-                    } while ($after);
-                    $userArtists = $user->artists;
-                    foreach ($userArtists as $userArtist) {
-                        try {
-                            if (!in_array($userArtist->spotify_id, $actualArtistsIdList)) {
-                                $user->artists()->detach($userArtist->id);
-                                $report->deleted_followings();
-                            }
-                        } catch (Exception $e) {
-                            $report->setErrorMessage($user->email . ': ' . $e->getMessage());
-                            continue;
-                        }
-                    }
-                } catch (Exception $e) {
-                    $report->setErrorMessage($user->email . ': ' . $e->getMessage());
-                    continue;
-                }
+                $this->updateFollowedArtistsForUser($user);
+                $report->analysed_users();
             }
         });
+
         return $report;
     }
 
