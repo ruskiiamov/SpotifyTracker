@@ -125,7 +125,6 @@ class Tasks
                 'message' => $e->getMessage(),
             ]);
         }
-
         Log::info('Finished: ' . __METHOD__, [
             'user_id' => $user->id,
             'createdArtists' => $createdArtistsCounter,
@@ -139,49 +138,61 @@ class Tasks
      */
     public function addFollowedAlbums(): Report
     {
-        $report = new Report('analysed_artists', 'added_albums');
-        $accessToken = $this->getAccessToken();
+        $report = new Report('analysed_artists');
         $checkThreshold = $this->getCheckDateTimeThreshold();
 
         Artist::has('followings')->where('checked_at', '<', $checkThreshold)
-            ->chunkById(200, function ($artists) use ($accessToken, &$report) {
+            ->chunkById(200, function ($artists) use (&$report) {
                 foreach ($artists as $artist) {
+                    $this->addLastArtistAlbum($artist);
                     $report->analysed_artists();
-                    try {
-                        $lastAlbum = $this->getLastAlbum($accessToken, $artist->spotify_id);
-
-                        $artist->checked_at = date('Y-m-d H:i:s');
-                        $artist->save();
-
-                        if (!$this->isReleaseDateOk($lastAlbum) || !$this->isAlbumNameOk($lastAlbum->name)) {
-                            continue;
-                        }
-
-                        if (Album::where('spotify_id', $lastAlbum->id)->doesntExist()) {
-                            $fullAlbum = Spotify::getAlbum($accessToken, $lastAlbum->id);
-                            $newAlbum = new Album();
-                            $newAlbum->fill([
-                                'spotify_id' => $lastAlbum->id,
-                                'name' => $fullAlbum->name,
-                                'release_date' => $fullAlbum->release_date,
-                                'artist_id' => $artist->id,
-                                'markets' => json_encode($fullAlbum->available_markets, JSON_UNESCAPED_UNICODE),
-                                'image' => $fullAlbum->images[1]->url,
-                                'popularity' => $fullAlbum->popularity,
-                            ])->save();
-                            $report->added_albums();
-
-                            $fullArtist = Spotify::getArtist($accessToken, $artist->spotify_id);
-                            $this->updateConnections($artist, $fullArtist->genres);
-                        }
-                    } catch (Exception $e) {
-                        $report->setErrorMessage($artist->name . ': ' . $e->getMessage());
-                        continue;
-                    }
                 }
             });
+
         return $report;
     }
+
+    public function addLastArtistAlbum(Artist $artist)
+    {
+        $accessToken = $this->getAccessToken();
+
+        try {
+            $lastAlbum = $this->getLastAlbum($accessToken, $artist->spotify_id);
+
+            $artist->checked_at = date('Y-m-d H:i:s');
+            $artist->save();
+
+            if ($this->isReleaseDateOk($lastAlbum) && $this->isAlbumNameOk($lastAlbum->name)) {
+                if (Album::where('spotify_id', $lastAlbum->id)->doesntExist()) {
+                    $fullAlbum = Spotify::getAlbum($accessToken, $lastAlbum->id);
+                    $newAlbum = new Album();
+                    $newAlbum->fill([
+                        'spotify_id' => $lastAlbum->id,
+                        'name' => $fullAlbum->name,
+                        'release_date' => $fullAlbum->release_date,
+                        'artist_id' => $artist->id,
+                        'markets' => json_encode($fullAlbum->available_markets, JSON_UNESCAPED_UNICODE),
+                        'image' => $fullAlbum->images[1]->url,
+                        'popularity' => $fullAlbum->popularity,
+                    ])->save();
+
+                    Log::info('Added new album', [
+                        'artist_name' => $artist->name,
+                        'album_name' => $newAlbum->name,
+                    ]);
+
+                    $fullArtist = Spotify::getArtist($accessToken, $artist->spotify_id);
+                    $this->updateConnections($artist, $fullArtist->genres);
+                }
+            }
+        } catch (Exception $e) {
+            Log::error(__METHOD__, [
+                'artist_id' => $artist->id,
+                'message' => $e->getMessage(),
+            ]);
+        }
+    }
+
 
     /**
      * @return Report
