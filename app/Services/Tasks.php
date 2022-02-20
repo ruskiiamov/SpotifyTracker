@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Facades\Spotify;
 use Exception;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
 use stdClass;
 
 class Tasks
@@ -101,6 +102,81 @@ class Tasks
             }
         });
         return $report;
+    }
+
+    /**
+     * @param User $user
+     * @return void
+     */
+    public function updateFollowedArtistsForUser(User $user)
+    {
+        Log::info('Started: ' . __METHOD__, ['user_id' => $user->id]);
+        $createdArtistsCounter = 0;
+        $createdFollowingsCounter = 0;
+        $deletedFollowingsCounter = 0;
+
+        try {
+            $accessToken = $this->getUserAccessToken($user);
+            $after = null;
+            $actualArtistsIdList = [];
+            do {
+                $result = Spotify::getFollowedArtists($accessToken, $after);
+                $artists = $result->artists->items;
+                $after = $result->artists->cursors->after;
+                foreach ($artists as $item) {
+                    try {
+                        $artistId = $item->id;
+                        $actualArtistsIdList[] = $artistId;
+                        $artist = Artist::where('spotify_id', $artistId)->first();
+                        if (!isset($artist)) {
+                            $artist = new Artist();
+                            $artist->fill([
+                                'spotify_id' => $artistId,
+                                'name' => $item->name,
+                            ])->save();
+                            $createdArtistsCounter++;
+                        }
+                        if ($user->artists()->where('artist_id', $artist->id)->doesntExist()) {
+                            $user->artists()->attach($artist->id);
+                            $createdFollowingsCounter++;
+                        }
+                    } catch (Exception $e) {
+                        Log::error(__METHOD__, [
+                            'user_id' => $user->id,
+                            'artist' => $item->name,
+                            'message' => $e->getMessage(),
+                        ]);
+                        continue;
+                    }
+                }
+            } while ($after);
+            $userArtists = $user->artists;
+            foreach ($userArtists as $userArtist) {
+                try {
+                    if (!in_array($userArtist->spotify_id, $actualArtistsIdList)) {
+                        $user->artists()->detach($userArtist->id);
+                        $deletedFollowingsCounter++;
+                    }
+                } catch (Exception $e) {
+                    Log::error(__METHOD__, [
+                        'user_id' => $user->id,
+                        'message' => $e->getMessage(),
+                    ]);
+                    continue;
+                }
+            }
+        } catch (Exception $e) {
+            Log::error(__METHOD__, [
+                'user_id' => $user->id,
+                'message' => $e->getMessage(),
+            ]);
+        }
+        Log::info('Finished: ' . __METHOD__, [
+            'user_id' => $user->id,
+            'createdArtists' => $createdArtistsCounter,
+            'createdFollowings' => $createdFollowingsCounter,
+            'deletedFollowings' => $deletedFollowingsCounter,
+        ]);
     }
 
     /**
@@ -224,7 +300,7 @@ class Tasks
      * @param Report $report
      * @return Report
      */
-    private function addReleases(string $mode, string $market, Report $report): Report
+    public function addReleases(string $mode, string $market, Report $report): Report
     {
         $accessToken = $this->getAccessToken();
 
