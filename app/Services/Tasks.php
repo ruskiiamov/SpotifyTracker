@@ -119,15 +119,18 @@ class Tasks
             $accessToken = $this->getUserAccessToken($user);
             $after = null;
             $actualArtistsIdList = [];
+
             do {
                 $result = Spotify::getFollowedArtists($accessToken, $after);
                 $artists = $result->artists->items;
                 $after = $result->artists->cursors->after;
+
                 foreach ($artists as $item) {
                     try {
                         $artistId = $item->id;
                         $actualArtistsIdList[] = $artistId;
                         $artist = Artist::where('spotify_id', $artistId)->first();
+
                         if (!isset($artist)) {
                             $artist = new Artist();
                             $artist->fill([
@@ -136,6 +139,7 @@ class Tasks
                             ])->save();
                             $createdArtistsCounter++;
                         }
+
                         if ($user->artists()->where('artist_id', $artist->id)->doesntExist()) {
                             $user->artists()->attach($artist->id);
                             $createdFollowingsCounter++;
@@ -150,7 +154,9 @@ class Tasks
                     }
                 }
             } while ($after);
+
             $userArtists = $user->artists;
+
             foreach ($userArtists as $userArtist) {
                 try {
                     if (!in_array($userArtist->spotify_id, $actualArtistsIdList)) {
@@ -171,6 +177,7 @@ class Tasks
                 'message' => $e->getMessage(),
             ]);
         }
+
         Log::info('Finished: ' . __METHOD__, [
             'user_id' => $user->id,
             'createdArtists' => $createdArtistsCounter,
