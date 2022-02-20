@@ -1,13 +1,10 @@
 <?php
 
-
 namespace App\Services;
-
 
 use App\Models\Album;
 use App\Models\Artist;
 use App\Models\Category;
-use App\Models\Connection;
 use App\Models\Genre;
 use App\Models\User;
 use App\Facades\Spotify;
@@ -16,7 +13,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use stdClass;
 
-class Tasks
+class Tracker
 {
     private $releaseAge;
     private $checkAge;
@@ -44,7 +41,7 @@ class Tasks
 
         User::chunk(200, function ($users) use (&$report){
             foreach ($users as $user) {
-                $this->updateFollowedArtistsForUser($user);
+                $this->updateUserFollowedArtists($user);
                 $report->analysed_users();
             }
         });
@@ -56,7 +53,7 @@ class Tasks
      * @param User $user
      * @return void
      */
-    public function updateFollowedArtistsForUser(User $user)
+    public function updateUserFollowedArtists(User $user)
     {
         Log::info('Started: ' . __METHOD__, ['user_id' => $user->id]);
         $createdArtistsCounter = 0;
@@ -152,6 +149,10 @@ class Tasks
         return $report;
     }
 
+    /**
+     * @param Artist $artist
+     * @return void
+     */
     public function addLastArtistAlbum(Artist $artist)
     {
         $accessToken = $this->getAccessToken();

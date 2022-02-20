@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Services\Tasks;
+use App\Services\Tracker;
 use App\Traits\ConsoleReport;
 use Illuminate\Console\Command;
 
@@ -42,7 +42,7 @@ class UpdateFollowedArtists extends Command
     {
         $this->line('Updating...');
         $startTime = time();
-        $report = (new Tasks())->updateFollowedArtists();
+        $report = (new Tracker())->updateFollowedArtists();
         $endTime = time();
         $duration = $endTime - $startTime;
         $this->info('Success: Followed artists updated');

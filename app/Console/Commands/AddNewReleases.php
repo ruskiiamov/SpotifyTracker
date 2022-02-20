@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Services\Tasks;
+use App\Services\Tracker;
 use App\Traits\ConsoleReport;
 use Illuminate\Console\Command;
 
@@ -43,7 +43,7 @@ class AddNewReleases extends Command
     {
         $this->line('Adding...');
         $startTime = time();
-        $report = (new Tasks())->addNewReleases();
+        $report = (new Tracker())->addNewReleases();
         $endTime = time();
         $duration = $endTime - $startTime;
         $this->info('Success: New releases added');

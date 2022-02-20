@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Services\Tasks;
+use App\Services\Tracker;
 use App\Traits\ConsoleReport;
 use Illuminate\Console\Command;
 
@@ -42,7 +42,7 @@ class UpdateAlbums extends Command
     {
         $this->line('Updating...');
         $startTime = time();
-        $report = (new Tasks())->updateAlbums();
+        $report = (new Tracker())->updateAlbums();
         $endTime = time();
         $duration = $endTime - $startTime;
         $this->info('Success: Albums table updated');
