@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Services\Tasks;
+use App\Services\Tracker;
 use Illuminate\Console\Command;
 
 class GenresAnalyse extends Command
@@ -37,7 +37,7 @@ class GenresAnalyse extends Command
      */
     public function handle()
     {
-        $words = (new Tasks())->genresAnalyse();
+        $words = (new Tracker())->genresAnalyse();
         $this->table(
             ['Word', 'Frequency'],
             $words

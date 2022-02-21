@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Services\Tasks;
+use App\Services\Tracker;
 use App\Traits\ConsoleReport;
 use Illuminate\Console\Command;
 
@@ -42,7 +42,7 @@ class ClearArtists extends Command
     {
         $this->line('Clearing...');
         $startTime = time();
-        $report = (new Tasks())->clearArtists();
+        $report = (new Tracker())->clearArtists();
         $endTime = time();
         $duration = $endTime - $startTime;
         $this->info('Success: Artists table cleared');

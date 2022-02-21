@@ -2,15 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Facades\Spotify;
 use App\Models\Album;
 use App\Models\Category;
 use App\Models\Subscription;
-use App\Models\User;
-use App\Services\Tasks;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Config;
 
 class HomeController extends Controller
 {

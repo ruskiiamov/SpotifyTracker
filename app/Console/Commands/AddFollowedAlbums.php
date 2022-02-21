@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Services\Tasks;
+use App\Services\Tracker;
 use App\Traits\ConsoleReport;
 use Illuminate\Console\Command;
 
@@ -42,7 +42,7 @@ class AddFollowedAlbums extends Command
     {
         $this->line('Adding...');
         $startTime = time();
-        $report = (new Tasks())->addFollowedAlbums();
+        $report = (new Tracker())->addFollowedAlbums();
         $endTime = time();
         $duration = $endTime - $startTime;
         $this->info('Success: New albums from followed artists added');
