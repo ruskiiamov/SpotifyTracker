@@ -25,6 +25,23 @@ class UpdateUserFollowedArtists implements ShouldQueue
     public int $tries = 3;
 
     /**
+     * The user whose followed artists will be updated.
+     *
+     * @var User
+     */
+    private User $user;
+
+    /**
+     * Create a new job instance.
+     *
+     * @param User $user
+     */
+    public function __construct(User $user)
+    {
+        $this->user = $user;
+    }
+
+    /**
      * Calculate the number of seconds to wait before retrying the job.
      *
      * @return array
@@ -35,25 +52,9 @@ class UpdateUserFollowedArtists implements ShouldQueue
     }
 
     /**
-     *
-     *
-     * @var User
-     */
-    private User $user;
-
-    /**
-     * Create a new job instance.
-     *
-     * @return void
-     */
-    public function __construct(User $user)
-    {
-        $this->user = $user;
-    }
-
-    /**
      * Execute the job.
      *
+     * @param Tracker $tracker
      * @return void
      */
     public function handle(Tracker $tracker)
