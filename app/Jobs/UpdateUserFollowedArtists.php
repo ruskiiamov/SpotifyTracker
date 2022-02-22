@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
-use App\Services\Tasks;
+use App\Models\User;
+use App\Services\Tracker;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -12,7 +13,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
-class UpdateFollowedArtists implements ShouldQueue
+class UpdateUserFollowedArtists implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -33,16 +34,21 @@ class UpdateFollowedArtists implements ShouldQueue
         return [1, 3, 5];
     }
 
-    private Tasks $tasks;
+    /**
+     *
+     *
+     * @var User
+     */
+    private User $user;
 
     /**
      * Create a new job instance.
      *
      * @return void
      */
-    public function __construct()
+    public function __construct(User $user)
     {
-        $this->tasks = new Tasks();
+        $this->user = $user;
     }
 
     /**
@@ -50,8 +56,8 @@ class UpdateFollowedArtists implements ShouldQueue
      *
      * @return void
      */
-    public function handle()
+    public function handle(Tracker $tracker)
     {
-        //
+        $tracker->updateUserFollowedArtists($this->user);
     }
 }
