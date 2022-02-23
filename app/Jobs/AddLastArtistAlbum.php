@@ -6,12 +6,14 @@ namespace App\Jobs;
 
 use App\Models\Artist;
 use App\Services\Tracker;
+use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 class AddLastArtistAlbum implements ShouldQueue
 {
@@ -59,6 +61,10 @@ class AddLastArtistAlbum implements ShouldQueue
      */
     public function handle(Tracker $tracker)
     {
-        $tracker->addLastArtistAlbum($this->artist);
+        try {
+            $tracker->addLastArtistAlbum($this->artist);
+        } catch (Exception $e) {
+            Log::error($e->getMessage(), ['method' => __METHOD__, 'artist_id' => $this->artist->id,]);
+        }
     }
 }

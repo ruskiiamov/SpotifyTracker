@@ -6,12 +6,14 @@ namespace App\Jobs;
 
 use App\Models\User;
 use App\Services\Tracker;
+use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 class UpdateUserFollowedArtists implements ShouldQueue
 {
@@ -59,6 +61,10 @@ class UpdateUserFollowedArtists implements ShouldQueue
      */
     public function handle(Tracker $tracker)
     {
-        $tracker->updateUserFollowedArtists($this->user);
+        try {
+            $tracker->updateUserFollowedArtists($this->user);
+        } catch (Exception $e) {
+            Log::error($e->getMessage(), ['method' => __METHOD__, 'user_id' => $this->user->id]);
+        }
     }
 }
