@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Jobs\AddLastArtistAlbum;
 use App\Models\Artist;
 use App\Services\Tracker;
 use Exception;
@@ -18,7 +19,7 @@ class AddFollowedAlbums extends Command
      *
      * @var string
      */
-    protected $signature = 'spotify:add-followed-albums';
+    protected $signature = 'app:queue-add-followed-albums';
 
     /**
      * The console command description.
@@ -48,19 +49,18 @@ class AddFollowedAlbums extends Command
     /**
      * Execute the console command.
      *
-     * @param Tracker $tracker
      * @return void
      */
-    public function handle(Tracker $tracker)
+    public function handle()
     {
         $checkThreshold = $this->getCheckDateTimeThreshold();
 
         Artist::has('followings')
             ->where('checked_at', '<', $checkThreshold)
-            ->chunkById(200, function ($artists) use ($tracker) {
+            ->chunkById(200, function ($artists) {
                 foreach ($artists as $artist) {
                     try {
-                        $tracker->addLastArtistAlbum($artist);//TODO change to Job Detaching
+                        AddLastArtistAlbum::dispatch($artist);
                     } catch (Exception $e) {
                         Log::error($e->getMessage(), ['method' => __METHOD__, 'artist_id' => $artist->id,]);
                     }
