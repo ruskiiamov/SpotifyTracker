@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Jobs\UpdateAlbum;
 use App\Models\Album;
-use App\Services\Tracker;
 use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -17,7 +17,7 @@ class UpdateAlbums extends Command
      *
      * @var string
      */
-    protected $signature = 'spotify:update-albums';
+    protected $signature = 'app:queue-update-albums';
 
     /**
      * The console command description.
@@ -39,15 +39,14 @@ class UpdateAlbums extends Command
     /**
      * Execute the console command.
      *
-     * @param Tracker $tracker
      * @return void
      */
-    public function handle(Tracker $tracker)
+    public function handle()
     {
-        Album::chunk(200, function ($albums) use ($tracker) {
+        Album::chunk(200, function ($albums) {
             foreach ($albums as $album) {
                 try {
-                    $tracker->updateAlbum($album);//TODO Change to Job Detach
+                    UpdateAlbum::dispatch($album);
                 } catch (Exception $e) {
                     Log::error($e->getMessage(), ['method' => __METHOD__, 'album_id' => $album->id]);
                 }
