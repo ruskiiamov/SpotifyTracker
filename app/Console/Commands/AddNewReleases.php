@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Services\Tracker;
+use App\Jobs\AddNewReleases as AddNewReleasesJob;
 use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -16,7 +16,7 @@ class AddNewReleases extends Command
      *
      * @var string
      */
-    protected $signature = 'spotify:add-new-releases';
+    protected $signature = 'app:queue-add-new-releases';
 
     /**
      * The console command description.
@@ -46,15 +46,14 @@ class AddNewReleases extends Command
     /**
      * Execute the console command.
      *
-     * @param Tracker $tracker
      * @return void
      */
-    public function handle(Tracker $tracker)
+    public function handle()
     {
         foreach ($this->markets as $market) {
             try {
-                $tracker->addNewReleases('new', $market);//TODO change to Job detaching
-                $tracker->addNewReleases('hipster', $market);//TODO change to enum
+                AddNewReleasesJob::dispatch('new', $market);//TODO change to enum
+                AddNewReleasesJob::dispatch('hipster', $market);
             } catch (Exception $e) {
                 Log::error($e->getMessage(), ['method' => __METHOD__]);
             }

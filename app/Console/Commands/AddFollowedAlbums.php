@@ -6,7 +6,6 @@ namespace App\Console\Commands;
 
 use App\Jobs\AddLastArtistAlbum;
 use App\Models\Artist;
-use App\Services\Tracker;
 use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
