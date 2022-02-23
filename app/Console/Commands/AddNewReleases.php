@@ -1,15 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Console\Commands;
 
 use App\Services\Tracker;
-use App\Traits\ConsoleReport;
+use Exception;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 
 class AddNewReleases extends Command
 {
-    use ConsoleReport;
-
     /**
      * The name and signature of the console command.
      *
@@ -25,6 +26,13 @@ class AddNewReleases extends Command
     protected $description = 'Add new releases ';
 
     /**
+     * Markets for new releases searching
+     *
+     * @var array
+     */
+    private array $markets;
+
+    /**
      * Create a new command instance.
      *
      * @return void
@@ -32,22 +40,24 @@ class AddNewReleases extends Command
     public function __construct()
     {
         parent::__construct();
+        $this->markets = config('spotifyConfig.markets');
     }
 
     /**
      * Execute the console command.
      *
-     * @return int
+     * @param Tracker $tracker
+     * @return void
      */
-    public function handle()
+    public function handle(Tracker $tracker)
     {
-        $this->line('Adding...');
-        $startTime = time();
-        $report = (new Tracker())->addNewReleases();
-        $endTime = time();
-        $duration = $endTime - $startTime;
-        $this->info('Success: New releases added');
-        $this->info('Time: ' . $duration . ' seconds');
-        $this->showReport($report->getReport());
+        foreach ($this->markets as $market) {
+            try {
+                $tracker->addNewReleases('new', $market);//TODO change to Job detaching
+                $tracker->addNewReleases('hipster', $market);//TODO change to enum
+            } catch (Exception $e) {
+                Log::error($e->getMessage(), ['method' => __METHOD__]);
+            }
+        }
     }
 }

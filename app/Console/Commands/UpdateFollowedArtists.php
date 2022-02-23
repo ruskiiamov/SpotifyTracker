@@ -1,15 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Console\Commands;
 
+use App\Models\User;
 use App\Services\Tracker;
-use App\Traits\ConsoleReport;
+use Exception;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 
 class UpdateFollowedArtists extends Command
 {
-    use ConsoleReport;
-
     /**
      * The name and signature of the console command.
      *
@@ -37,16 +39,19 @@ class UpdateFollowedArtists extends Command
     /**
      * Execute the console command.
      *
+     * @param Tracker $tracker
+     * @return void
      */
-    public function handle()
+    public function handle(Tracker $tracker)
     {
-        $this->line('Updating...');
-        $startTime = time();
-        $report = (new Tracker())->updateFollowedArtists();
-        $endTime = time();
-        $duration = $endTime - $startTime;
-        $this->info('Success: Followed artists updated');
-        $this->info('Time: ' . $duration . ' seconds');
-        $this->showReport($report->getReport());
+        User::chunk(200, function ($users) use ($tracker) {
+            foreach ($users as $user) {
+                try {
+                    $tracker->updateUserFollowedArtists($user); //TODO change to Job Detaching
+                } catch (Exception $e) {
+                    Log::error($e->getMessage(), ['method' => __METHOD__, 'user_id' => $user->id]);
+                }
+            }
+        });
     }
 }

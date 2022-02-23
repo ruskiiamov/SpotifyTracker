@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Console\Commands;
 
 use App\Services\Tracker;
@@ -34,13 +36,12 @@ class GenresAnalyse extends Command
     /**
      * Execute the console command.
      *
+     * @param Tracker $tracker
+     * @return void
      */
-    public function handle()
+    public function handle(Tracker $tracker)
     {
-        $words = (new Tracker())->genresAnalyse();
-        $this->table(
-            ['Word', 'Frequency'],
-            $words
-        );
+        $words = $tracker->genresAnalyse();
+        $this->table(['Word', 'Frequency'], $words);
     }
 }

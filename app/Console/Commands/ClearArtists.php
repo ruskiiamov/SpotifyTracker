@@ -1,15 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Console\Commands;
 
 use App\Services\Tracker;
-use App\Traits\ConsoleReport;
+use Exception;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 
 class ClearArtists extends Command
 {
-    use ConsoleReport;
-
     /**
      * The name and signature of the console command.
      *
@@ -37,16 +38,15 @@ class ClearArtists extends Command
     /**
      * Execute the console command.
      *
+     * @param Tracker $tracker
+     * @return void
      */
-    public function handle()
+    public function handle(Tracker $tracker)
     {
-        $this->line('Clearing...');
-        $startTime = time();
-        $report = (new Tracker())->clearArtists();
-        $endTime = time();
-        $duration = $endTime - $startTime;
-        $this->info('Success: Artists table cleared');
-        $this->info('Time: ' . $duration . ' seconds');
-        $this->showReport($report->getReport());
+        try {
+            $tracker->clearArtists();//TODO change to Job Detaching
+        } catch (Exception $e) {
+            Log::error($e->getMessage(), ['method' => __METHOD__]);
+        }
     }
 }
