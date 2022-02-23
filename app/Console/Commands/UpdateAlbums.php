@@ -1,15 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Console\Commands;
 
+use App\Models\Album;
 use App\Services\Tracker;
-use App\Traits\ConsoleReport;
+use Exception;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 
 class UpdateAlbums extends Command
 {
-    use ConsoleReport;
-
     /**
      * The name and signature of the console command.
      *
@@ -37,16 +39,19 @@ class UpdateAlbums extends Command
     /**
      * Execute the console command.
      *
+     * @param Tracker $tracker
+     * @return void
      */
-    public function handle()
+    public function handle(Tracker $tracker)
     {
-        $this->line('Updating...');
-        $startTime = time();
-        $report = (new Tracker())->updateAlbums();
-        $endTime = time();
-        $duration = $endTime - $startTime;
-        $this->info('Success: Albums table updated');
-        $this->info('Time: ' . $duration . ' seconds');
-        $this->showReport($report->getReport());
+        Album::chunk(200, function ($albums) use ($tracker) {
+            foreach ($albums as $album) {
+                try {
+                    $tracker->updateAlbum($album);//TODO Change to Job Detach
+                } catch (Exception $e) {
+                    Log::error($e->getMessage(), ['method' => __METHOD__, 'album_id' => $album->id]);
+                }
+            }
+        });
     }
 }

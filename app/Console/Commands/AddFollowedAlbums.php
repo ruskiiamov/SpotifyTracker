@@ -1,14 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Console\Commands;
 
+use App\Models\Artist;
 use App\Services\Tracker;
-use App\Traits\ConsoleReport;
+use Exception;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 
 class AddFollowedAlbums extends Command
 {
-    use ConsoleReport;
 
     /**
      * The name and signature of the console command.
@@ -25,6 +28,13 @@ class AddFollowedAlbums extends Command
     protected $description = 'Add new albums from followed artists for all users';
 
     /**
+     * Waiting period for artist's new releases check
+     *
+     * @var int
+     */
+    private int $checkAge;
+
+    /**
      * Create a new command instance.
      *
      * @return void
@@ -32,21 +42,37 @@ class AddFollowedAlbums extends Command
     public function __construct()
     {
         parent::__construct();
+        $this->checkAge = config('spotifyConfig.checkAge');
     }
 
     /**
      * Execute the console command.
      *
+     * @param Tracker $tracker
+     * @return void
      */
-    public function handle()
+    public function handle(Tracker $tracker)
     {
-        $this->line('Adding...');
-        $startTime = time();
-        $report = (new Tracker())->addFollowedAlbums();
-        $endTime = time();
-        $duration = $endTime - $startTime;
-        $this->info('Success: New albums from followed artists added');
-        $this->info('Time: ' . $duration . ' seconds');
-        $this->showReport($report->getReport());
+        $checkThreshold = $this->getCheckDateTimeThreshold();
+
+        Artist::has('followings')
+            ->where('checked_at', '<', $checkThreshold)
+            ->chunkById(200, function ($artists) use ($tracker) {
+                foreach ($artists as $artist) {
+                    try {
+                        $tracker->addLastArtistAlbum($artist);//TODO change to Job Detaching
+                    } catch (Exception $e) {
+                        Log::error($e->getMessage(), ['method' => __METHOD__, 'artist_id' => $artist->id,]);
+                    }
+                }
+            });
+    }
+
+    /**
+     * @return string
+     */
+    private function getCheckDateTimeThreshold(): string
+    {
+        return date('Y-m-d H:i:s', time() - $this->checkAge * 60 * 60);
     }
 }
