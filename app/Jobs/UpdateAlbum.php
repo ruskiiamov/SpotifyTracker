@@ -27,21 +27,13 @@ class UpdateAlbum implements ShouldQueue
     public int $tries = 3;
 
     /**
-     * The album for update or delete.
-     *
-     * @var Album
-     */
-    private Album $album;
-
-    /**
      * Create a new job instance.
      *
      * @param Album $album
      */
-    public function __construct (Album $album)
-    {
-        $this->album = $album;
-    }
+    public function __construct (
+        private Album $album,
+    ) {}
 
     /**
      * Calculate the number of seconds to wait before retrying the job.

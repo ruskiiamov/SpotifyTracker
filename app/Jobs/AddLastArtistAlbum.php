@@ -27,21 +27,13 @@ class AddLastArtistAlbum implements ShouldQueue
     public int $tries = 3;
 
     /**
-     * The user whose followed artists will be updated.
-     *
-     * @var Artist
-     */
-    private Artist $artist;
-
-    /**
      * Create a new job instance.
      *
      * @param Artist $artist
      */
-    public function __construct (Artist $artist)
-    {
-        $this->artist = $artist;
-    }
+    public function __construct (
+        private Artist $artist,
+    ) {}
 
     /**
      * Calculate the number of seconds to wait before retrying the job.
