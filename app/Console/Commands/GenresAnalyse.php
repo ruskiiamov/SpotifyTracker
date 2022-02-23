@@ -14,7 +14,7 @@ class GenresAnalyse extends Command
      *
      * @var string
      */
-    protected $signature = 'spotify:genres-analyse';
+    protected $signature = 'app:genres-analyse';
 
     /**
      * The console command description.
