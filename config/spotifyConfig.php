@@ -27,6 +27,7 @@ return [
             'garage', 'beats', 'disco', 'dubstep', 'indietronica', 'synthwave', 'breakcore',
             'nintendocore', 'techno', 'drum and bass', 'phonk', 'hardstyle'],
         'latin' => ['latin'],
+        'other' => ['other'],
     ],
 
     'exceptions' => ['live', 'remix', 'anniversary', 'deluxe', 'expanded', 'instrumentals',
