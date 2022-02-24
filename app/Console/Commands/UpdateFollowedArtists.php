@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Jobs\UpdateUserFollowedArtists;
 use App\Models\User;
-use App\Services\Tracker;
 use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -17,7 +17,7 @@ class UpdateFollowedArtists extends Command
      *
      * @var string
      */
-    protected $signature = 'spotify:update-followed-artists';
+    protected $signature = 'app:queue-update-followed-artists';
 
     /**
      * The console command description.
@@ -39,15 +39,14 @@ class UpdateFollowedArtists extends Command
     /**
      * Execute the console command.
      *
-     * @param Tracker $tracker
      * @return void
      */
-    public function handle(Tracker $tracker)
+    public function handle()
     {
-        User::chunk(200, function ($users) use ($tracker) {
+        User::chunk(200, function ($users) {
             foreach ($users as $user) {
                 try {
-                    $tracker->updateUserFollowedArtists($user); //TODO change to Job Detaching
+                    UpdateUserFollowedArtists::dispatch($user);
                 } catch (Exception $e) {
                     Log::error($e->getMessage(), ['method' => __METHOD__, 'user_id' => $user->id]);
                 }

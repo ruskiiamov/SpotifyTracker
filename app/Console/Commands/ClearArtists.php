@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Services\Tracker;
+use App\Jobs\ClearArtists as ClearArtistsJobs;
 use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -16,7 +16,7 @@ class ClearArtists extends Command
      *
      * @var string
      */
-    protected $signature = 'spotify:clear-artists';
+    protected $signature = 'app:queue-clear-artists';
 
     /**
      * The console command description.
@@ -38,13 +38,12 @@ class ClearArtists extends Command
     /**
      * Execute the console command.
      *
-     * @param Tracker $tracker
      * @return void
      */
-    public function handle(Tracker $tracker)
+    public function handle()
     {
         try {
-            $tracker->clearArtists();//TODO change to Job Detaching
+            ClearArtistsJobs::dispatch();
         } catch (Exception $e) {
             Log::error($e->getMessage(), ['method' => __METHOD__]);
         }
