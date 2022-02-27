@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Facades\Spotify;
 use App\Http\Requests\CodeSpotifyRequest;
 use App\Http\Requests\LoginSpotifyRequest;
+use App\Jobs\AfterFirstLogin;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -44,6 +45,8 @@ class AuthController extends Controller
                 'country' => $userData->country,
                 'refresh_token' => $result->refresh_token,
             ])->save();
+
+            AfterFirstLogin::dispatch($user)->onQueue('high');
         }
 
         Auth::login($user, session('remember'));
