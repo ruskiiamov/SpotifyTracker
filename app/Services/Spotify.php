@@ -1,19 +1,16 @@
 <?php
 
-
 namespace App\Services;
 
-
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class Spotify
 {
-
     private $authUrl = 'https://accounts.spotify.com/authorize';
     private $tokenUrl = 'https://accounts.spotify.com/api/token';
     private $apiUrl = 'https://api.spotify.com/v1';
     private $scope = 'user-read-email user-read-private user-follow-read user-library-read';
-
 
     public function getAuthUrl()
     {
@@ -28,15 +25,6 @@ class Spotify
         $url = $this->authUrl . '?' . http_build_query($parameters, '', '&');
         return $url;
     }
-
-
-    private function createState()
-    {
-        $state = uniqid(rand(), true);
-        session(['state' => $state]);
-        return $state;
-    }
-
 
     public function getAccessToken($code)
     {
@@ -56,7 +44,6 @@ class Spotify
 
     }
 
-
     public function getRefreshedAccessToken($refreshToken)
     {
         $parameters = [
@@ -75,6 +62,22 @@ class Spotify
         return $result->access_token;
     }
 
+    public function getClientAccessToken()
+    {
+        $parameters = [
+            'grant_type' => 'client_credentials',
+        ];
+
+        $base64 = base64_encode(env('SPOTIFY_CLIENT_ID') . ':' . env('SPOTIFY_CLIENT_SECRET'));
+
+        $headers = ['Authorization' => 'Basic ' . $base64];
+
+        $result = $this->request('POST', $this->tokenUrl, $parameters, $headers);
+
+        $this->saveClientAccessToken($result->access_token, $result->expires_in);
+
+        return $result->access_token;
+    }
 
     public function getUserData($accessToken)
     {
@@ -82,52 +85,10 @@ class Spotify
         return $this->request('GET', $this->apiUrl . '/me', [], $headers);
     }
 
-
-    private function request($method, $url, $parameters = [], $headers = [])
-    {
-        $parameters = http_build_query($parameters, '', '&');
-
-        $options = [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPHEADER => [],
-        ];
-
-        foreach ($headers as $key => $val) {
-            $options[CURLOPT_HTTPHEADER][] = "{$key}: {$val}";
-        }
-
-        if ($method == 'GET') {
-            $options[CURLOPT_URL] = $url . $parameters;
-        }
-
-        if ($method == 'POST') {
-            $options[CURLOPT_URL] = $url;
-            $options[CURLOPT_POST] = true;
-            $options[CURLOPT_POSTFIELDS] = $parameters;
-        }
-
-        $ch = curl_init();
-        curl_setopt_array($ch, $options);
-        $response = json_decode(curl_exec($ch));
-        curl_close($ch);
-
-        return $response;
-    }
-
-    private function saveAccessToken($accessToken, $expires_in)
-    {
-        session([
-            'access_token' => $accessToken,
-            'expiring_time' => time() + (int) (0.99 * $expires_in),
-        ]);
-    }
-
-
     public function isFreshAccessToken()
     {
         return time() < session('expiring_time');
     }
-
 
     public function getFollowedArtists($accessToken, $after = null)
     {
@@ -221,5 +182,56 @@ class Spotify
         $headers = ['Authorization' => 'Bearer ' . $accessToken];
 
         return $this->request('GET', $this->apiUrl . '/markets', [], $headers);
+    }
+
+    private function createState()
+    {
+        $state = uniqid(rand(), true);
+        session(['state' => $state]);
+        return $state;
+    }
+
+    private function request($method, $url, $parameters = [], $headers = [])
+    {
+        $parameters = http_build_query($parameters, '', '&');
+
+        $options = [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => [],
+        ];
+
+        foreach ($headers as $key => $val) {
+            $options[CURLOPT_HTTPHEADER][] = "{$key}: {$val}";
+        }
+
+        if ($method == 'GET') {
+            $options[CURLOPT_URL] = $url . $parameters;
+        }
+
+        if ($method == 'POST') {
+            $options[CURLOPT_URL] = $url;
+            $options[CURLOPT_POST] = true;
+            $options[CURLOPT_POSTFIELDS] = $parameters;
+        }
+
+        $ch = curl_init();
+        curl_setopt_array($ch, $options);
+        $response = json_decode(curl_exec($ch));
+        curl_close($ch);
+
+        return $response;
+    }
+
+    private function saveAccessToken($accessToken, $expires_in)
+    {
+        session([
+            'access_token' => $accessToken,
+            'expiring_time' => time() + $expires_in - 10,
+        ]);
+    }
+
+    private function saveClientAccessToken($accessToken, $expires_in)
+    {
+        Cache::put('client_access_token', $accessToken, $expires_in - 10);
     }
 }
