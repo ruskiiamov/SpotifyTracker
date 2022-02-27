@@ -17,7 +17,7 @@
                 >
                 <span>{{ $category->name }}</span><br>
             @endforeach
-            <br><input type="submit" value="Save">
+            <br><input type="submit" value="Save and Show">
         </form>
     </div>
 </x-layout>

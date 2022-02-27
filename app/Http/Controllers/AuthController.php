@@ -47,10 +47,11 @@ class AuthController extends Controller
             ])->save();
 
             AfterFirstLogin::dispatch($user)->onQueue('high');
+            Auth::login($user, session('remember'));
+            return redirect()->route('genres');
         }
 
         Auth::login($user, session('remember'));
-
         return redirect()->route('index');
     }
 
