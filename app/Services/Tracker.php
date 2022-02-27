@@ -12,24 +12,23 @@ use App\Models\User;
 use App\Facades\Spotify;
 use Exception;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use stdClass;
 
 class Tracker
 {
-    private $releaseAge;
-    private $genreCategories;
-    private $exceptions;
-    private $artistIdExceptions;
-
-    public function __construct()
-    {
-        $this->releaseAge = Config::get('spotifyConfig.releaseAge');
-        $this->genreCategories = Config::get('spotifyConfig.genreCategories');
-        $this->exceptions = Config::get('spotifyConfig.exceptions');
-        $this->artistIdExceptions = Config::get('spotifyConfig.artistIdExceptions');
-    }
+    /**
+     * @param int $releaseAge
+     * @param array $genreCategories
+     * @param array $exceptions
+     * @param array $artistIdExceptions
+     */
+    public function __construct(
+        private int $releaseAge,
+        private array $genreCategories,
+        private array $exceptions,
+        private array $artistIdExceptions,
+    ) {}
 
     /**
      * @param User $user

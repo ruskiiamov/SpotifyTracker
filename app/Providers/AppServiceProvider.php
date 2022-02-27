@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Services\Tracker;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -13,7 +14,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        $this->app->singleton(Tracker::class, function () {
+            return new Tracker(
+                releaseAge: config('spotifyConfig.releaseAge'),
+                genreCategories: config('spotifyConfig.genreCategories'),
+                exceptions: config('spotifyConfig.exceptions'),
+                artistIdExceptions: config('spotifyConfig.artistIdExceptions'),
+            );
+        });
     }
 
     /**
