@@ -11,6 +11,7 @@ use App\Models\Genre;
 use App\Models\User;
 use App\Facades\Spotify;
 use Exception;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use stdClass;
@@ -95,7 +96,7 @@ class Tracker
      */
     public function addLastArtistAlbum(Artist $artist)
     {
-        $accessToken = $this->getAccessToken();
+        $accessToken = $this->getClientAccessToken();
 
         $lastAlbum = $this->getLastAlbum($accessToken, $artist->spotify_id);
 
@@ -128,7 +129,7 @@ class Tracker
      */
     public function updateAlbum(Album $album)
     {
-        $accessToken = $this->getAccessToken();
+        $accessToken = $this->getClientAccessToken();
         $releaseDateThreshold = $this->getReleaseDateThreshold();
 
         if ($album->release_date < $releaseDateThreshold) {
@@ -160,7 +161,7 @@ class Tracker
      */
     public function addNewReleases(string $searchTag, string $market)
     {
-        $accessToken = $this->getAccessToken();
+        $accessToken = $this->getClientAccessToken();
         $offset = null;
 
         do {
@@ -346,17 +347,18 @@ class Tracker
     private function getUserAccessToken(User $user): string
     {
         $refreshToken = $user->refresh_token;
-        $accessToken = Spotify::getRefreshedAccessToken($refreshToken);
-        return $accessToken;
+        return Spotify::getRefreshedAccessToken($refreshToken);
     }
 
     /**
      * @return string
      */
-    private function getAccessToken(): string
+    private function getClientAccessToken(): string
     {
-        $refreshToken = User::first()->refresh_token;
-        return Spotify::getRefreshedAccessToken($refreshToken);
-    }
+        if (Cache::has('client_access_token')) {
+            return Cache::get('client_access_token');
+        }
 
+        return Spotify::getClientAccessToken();
+    }
 }
