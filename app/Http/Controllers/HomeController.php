@@ -99,7 +99,7 @@ class HomeController extends Controller
             }
         }
 
-        return redirect()->route('index');
+        return redirect()->route('subscribed');
     }
 
     private function sortReleases($array)
