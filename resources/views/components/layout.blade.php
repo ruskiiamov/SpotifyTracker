@@ -10,12 +10,33 @@
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     <script src="{{ asset('js/app.js') }}" defer></script>
 </head>
-<body>
-<header>
-    {{ $header }}
+<body class="bg-black text-white text-lg min-h-screen flex flex-col justify-between font-sans">
+<header class="bg-green text-white mb-6">
+    <div class="container mx-auto px-4 flex justify-between items-center flex-wrap">
+        <div class="flex items-center py-3">
+            <a href="{{ route('index') }}" class="font-bold text-4xl ">ReleaseHunter</a>
+        </div>
+        <div class="flex items-center py-2">{{ $header }}</div>
+    </div>
 </header>
 <main>
-    {{ $slot }}
+    <div class="container mx-auto px-4">
+        {{ $slot }}
+    </div>
 </main>
+<footer>
+    <div class="container mx-auto px-4 flex justify-between items-center flex-wrap">
+        <div class="py-6 flex-none">
+            <a href="https://www.spotify.com/">
+                <img src="{{ asset('storage/Spotify_Logo_RGB_White.png') }}" class="h-12">
+            </a>
+        </div>
+        <div class="py-6 flex-none">
+            <a href="https://github.com/ruskiiamov/SpotifyTracker">
+                <img src="{{ asset('storage/GitHub_Logo_White.png') }}" class="h-12">
+            </a>
+        </div>
+    </div>
+</footer>
 </body>
 </html>
