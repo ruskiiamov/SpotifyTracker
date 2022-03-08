@@ -32,7 +32,7 @@
             </a>
         </div>
         <div class="py-6 flex-none">
-            <a href="https://github.com/ruskiiamov/SpotifyTracker">
+            <a href="https://github.com/ruskiiamov/ReleaseHunter-for-Spotify">
                 <img src="{{ asset('storage/GitHub_Logo_White.png') }}" class="h-12">
             </a>
         </div>
