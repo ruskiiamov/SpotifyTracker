@@ -20,7 +20,7 @@
                 </div>
             </a>
             <a href="{{ route('genres') }}" class="flex bg-green text-black font-bold py-2 px-4 rounded-full w-48 h-12 flex justify-center items-center">
-                <p>All New Releases</p>
+                <p>Releases by Genre</p>
             </a>
         </div>
     </div>
