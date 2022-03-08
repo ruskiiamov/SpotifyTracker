@@ -1,31 +1,34 @@
 <x-layout>
     <x-slot name="header">
-        <h2>
-            The {{ $title }} releases for the last two weeks
-        </h2>
+        <a href="{{ route('logout') }}" class="font-bold text-white text-xl">Logout</a>
     </x-slot>
 
     <div>
         @foreach($newReleases as $date => $dateNewReleases)
             <div>
-                <p style="text-decoration: underline">{{ $date }}</p>
-                <div>
+                <span class="p-2 bg-green border border-green rounded-full">{{ date("F d", strtotime($date)) }}</span>
+                <div class="my-4 grid xl:grid-cols-2 lg:grid-cols-2 md:grid-cols-1 sm:grid-cols-1">
                     @foreach($dateNewReleases as $newRelease)
-                        <div style="display: flex">
-                            <div>
+                        <div class="mb-16 grid gap-x-2 xl:grid-cols-2 lg:grid-cols-2 md:grid-cols-2 sm:grid-cols-1">
+                            <div class="pl-1">
                                 <a href="{{ 'https://open.spotify.com/album/' . $newRelease->spotify_id }}" target="_blank">
-                                    <img src="{{ $newRelease->image }}" height="220" width="220" style="margin-right: 16px">
+                                    <img src="{{ $newRelease->image }}" class="border border-2 border-white">
                                 </a>
                             </div>
-                            <div>
-                                <span style="font-weight: bold">{{ $newRelease->artist->name }}</span><br>
-                                <span>{{ $newRelease->name }}</span><br><br>
-                                <span>| @foreach($newRelease->artist->genres as $genre){{ $genre->name }} | @endforeach</span><br><br>
-                                <span>Album popularity on Spotify: {{$newRelease->popularity}}/100</span>
+                            <div class="pr-1 flex flex-col justify-between">
+                                <div>
+                                    <p class="font-bold text-2xl">{{ $newRelease->artist->name }}</p>
+                                    <p class="text-xl">{{ $newRelease->name }}</p>
+                                </div>
+                                <div>
+                                    @foreach($newRelease->artist->genres as $genre)<span class="mr-2 my-1 px-1 text-base text-white bg-green border border-green rounded-full inline-block">{{ $genre->name }}</span>@endforeach
+                                </div>
+                                <div>
+                                    <span>popularity: {{$newRelease->popularity}}/100</span>
+                                </div>
                             </div>
                         </div>
                     @endforeach
-                    <hr>
                 </div>
             </div>
         @endforeach
