@@ -85,7 +85,6 @@ class HomeController extends Controller
         $user = Auth::user();
 
         foreach ($request->except('_token') as $key => $item) {
-            echo "{$key} => {$item}<br>";
             if ($item) {
                 Subscription::firstOrCreate([
                     'user_id' => $user->id,
