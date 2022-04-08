@@ -1,11 +1,6 @@
-ARG composer_version
 ARG php_version
 
-FROM composer:${composer_version} as vendor
-
 FROM php:${php_version}-fpm
-
-COPY --from=vendor /usr/bin/composer /usr/bin/composer
 
 RUN apt-get update && apt-get install -y \
     libxml2-dev \
@@ -32,5 +27,3 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /var/www/html/
 
 USER www-data:www-data
-
-CMD composer install

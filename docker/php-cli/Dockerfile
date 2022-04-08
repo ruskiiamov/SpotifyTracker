@@ -1,3 +1,5 @@
+ARG php_version
+
 FROM php:${php_version}-cli
 
 RUN apt-get update && apt-get install -y \
@@ -22,20 +24,9 @@ RUN apt-get update && apt-get install -y \
 	&& docker-php-ext-install pdo_mysql \
 	&& docker-php-ext-install pdo_pgsql \
 	&& docker-php-ext-install soap \
-    && mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+    && mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
+    && rm -rf /var/lib/apt/lists/*
 
-COPY cron-schedule /etc/cron.d/cron-schedule
-
-RUN chmod 0644 /etc/cron.d/cron-schedule
-RUN crontab /etc/cron.d/cron-schedule
-
-COPY queue-worker.conf /etc/supervisor/conf.d/queue-worker.conf
-
-RUN supervisorctl reread
-RUN supervisorctl update
-
+RUN useradd -ms /bin/bash project
+USER project
 WORKDIR /var/www/html/
-
-USER www-data:www-data
-
-CMD supervisorctl start laravel-worker:*

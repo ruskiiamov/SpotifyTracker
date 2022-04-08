@@ -21,7 +21,6 @@ services:
       context: ./docker/php-fpm
       args:
         - php_version=${PHP_VERSION}
-        - composer_version=${COMPOSER_VERSION}
     restart: always
     volumes:
       - ${APP_PATH}:/var/www/html
@@ -34,6 +33,16 @@ services:
     restart: always
     volumes:
       - ${APP_PATH}:/var/www/html
+      - "./docker/php-cli/supervisord.conf:/etc/supervisor/supervisord.conf"
+      - "./docker/php-cli/supervisord-programs.conf:/etc/supervisor/conf.d/app.conf"
+    command: ["supervisord", "-c", "/etc/supervisor/supervisord.conf"]
+
+  composer:
+    image: composer:${COMPOSER_VERSION}
+    volumes:
+      - ${APP_PATH}:/var/www/html/
+    working_dir: /var/www/html/
+    command: composer install
 
   pgsql:
     image: postgres:latest
