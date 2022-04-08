@@ -1,0 +1,57 @@
+version: "3"
+
+services:
+
+  nginx:
+    image: nginx:latest
+    restart: always
+    depends_on:
+      - php-fpm
+    volumes:
+      - ./docker/nginx/templates:/etc/nginx/templates
+      - ${APP_PATH}:/var/www/html
+    environment:
+      - ROOT_DIR=${DOCUMENT_ROOT}
+      - PHP_FPM=php-fpm
+    ports:
+      - "80:80"
+
+  php-fpm:
+    build:
+      context: ./docker/php-fpm
+      args:
+        - php_version=${PHP_VERSION}
+    restart: always
+    volumes:
+      - ${APP_PATH}:/var/www/html
+
+  php-cli:
+    build:
+      context: ./docker/php-cli
+      args:
+        - php_version=${PHP_VERSION}
+    restart: always
+    volumes:
+      - ${APP_PATH}:/var/www/html
+      - "./docker/php-cli/supervisord.conf:/etc/supervisor/supervisord.conf"
+      - "./docker/php-cli/supervisord-programs.conf:/etc/supervisor/conf.d/app.conf"
+    command: ["supervisord", "-c", "/etc/supervisor/supervisord.conf"]
+
+  composer:
+    image: composer:${COMPOSER_VERSION}
+    volumes:
+      - ${APP_PATH}:/var/www/html/
+    working_dir: /var/www/html/
+    command: composer install
+
+  pgsql:
+    image: postgres:latest
+    restart: always
+    volumes:
+      - ./docker/postgres/data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: releasehunter
+    ports:
+      - "5432:5432"
