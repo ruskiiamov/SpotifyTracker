@@ -27,6 +27,5 @@ RUN apt-get update && apt-get install -y \
     && mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
     && rm -rf /var/lib/apt/lists/*
 
-RUN useradd -ms /bin/bash project
-USER project
+USER www-data:www-data
 WORKDIR /var/www/html/
