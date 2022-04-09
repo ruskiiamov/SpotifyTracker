@@ -47,9 +47,31 @@ return [
         '2p0UyoPfYfI76PCStuXfOP', //Franz Schubert
         '5wTAi7QkpP6kp8a54lmTOq', //Johannes Brahms
         '2hHUcumhJFUHQKg5h3jI1Y', //Jazz Lounge Bar
+        '3jmd2RL8vGnluearHualn2', //Coffee Shop Jazz Piano Chilling
+        '21p1cEg5BT8TCSYIlV3k7M', //Easy Listening Background Music
     ],
 
     'markets' => [
-        'AU', 'CA', 'GB', 'IE', 'JP', 'NO', 'RU', 'SE', 'UA', 'US'
+        'AL', 'AM', 'AR', 'AT', 'AU', 'AZ',
+        'BA', 'BE', 'BG', 'BR', 'BY',
+        'CA', 'CH', 'CL', 'CY', 'CZ',
+        'DE', 'DK',
+        'EE', 'EG', 'ES',
+        'FI', 'FR',
+        'GB', 'GE', 'GR',
+        'HK', 'HU',
+        'IE', 'IL', 'IN', 'IS', 'IT',
+        'JM', 'JP',
+        'KZ', 'KR', 'KG',
+        'LI', 'LV', 'LT', 'LU',
+        'MT', 'MX', 'MD', 'MC', 'MN',
+        'NO', 'NP', 'NL', 'NZ',
+        'PK', 'PE', 'PL', 'PT',
+        'RU', 'RO', 'RS',
+        'SE', 'SG', 'SK', 'SI',
+        'TJ', 'TR',
+        'UA', 'US', 'UZ',
+        'VN',
+        'ZA'
     ],
 ];
