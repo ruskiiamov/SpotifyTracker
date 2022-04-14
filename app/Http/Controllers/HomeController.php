@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Album;
 use App\Models\Category;
+use App\Models\Connection;
+use App\Models\Genre;
 use App\Models\Subscription;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,57 +21,42 @@ class HomeController extends Controller
     {
         $user = Auth::user();
         $country = $user->country;
-        $artists = $user->artists;
-        $newReleases = [];
-        foreach ($artists as $artist) {
-            $albums = $artist->albums;
-            if (is_null($albums->first())) {
-                continue;
-            }
-            foreach ($albums as $album) {
-                $markets = json_decode($album->markets);
-                if (!in_array($country, $markets)) {
-                    continue;
-                }
-                $newReleases[$album->release_date][] = $album;
-            }
-        }
-        krsort($newReleases);
+
+        $artistIds = $user->artists()->has('albums')->get()->pluck('id')->all();
+
+        $albums = Album::whereIn('artist_id', $artistIds)
+            ->whereJsonContains('markets', $country)
+            ->orderBy('release_date', 'desc')
+            ->orderBy('popularity', 'desc')
+            ->get()
+            ->groupBy('release_date')
+            ->all();
+
         $title = 'followed artists';
-        return view('albums', ['newReleases' => $newReleases, 'title' => $title]);
+        return view('albums', ['newReleases' => $albums, 'title' => $title]);
     }
 
     public function subscribed()
     {
         $user = Auth::user();
         $country = $user->country;
-        $subscribedCategories = [];
-        foreach ($user->categories as $category) {
-            $subscribedCategories[] = $category->name;
-        }
-        $newReleases = [];
-        $albums = Album::all();
-        foreach ($albums as $album) {
-            $markets = json_decode($album->markets);
-            if (!in_array($country, $markets)) {
-                continue;
-            }
-            $artistId = $album->artist->id;
-            if (!is_null($user->artists->find($artistId))) {
-                continue;
-            }
-            $genres = $album->artist->genres;
-            foreach ($genres as $genre) {
-                $category = $genre->category;
-                if (in_array($category->name, $subscribedCategories)) {
-                    $newReleases[$album->release_date][] = $album;
-                    break;
-                }
-            }
-        }
-        $sortedNewReleases = $this->sortReleases($newReleases);
+
+        $categoryIds = $user->categories->pluck('id')->all();
+        $genreIds = Genre::whereIn('category_id', $categoryIds)->get()->pluck('id')->all();
+        $artistIds = Connection::whereIn('genre_id', $genreIds)->get()->unique('artist_id')->pluck('artist_id')->all();
+        $followedArtistIds = $user->artists()->has('albums')->get()->pluck('id')->all();
+        $filteredArtistIds = array_diff($artistIds, $followedArtistIds);
+
+        $albums = Album::whereIn('artist_id', $filteredArtistIds)
+            ->whereJsonContains('markets', $country)
+            ->orderBy('release_date', 'desc')
+            ->orderBy('popularity', 'desc')
+            ->get()
+            ->groupBy('release_date')
+            ->all();
+
         $title = 'subscribed genres';
-        return view('albums', ['newReleases' => $sortedNewReleases, 'title' => $title]);
+        return view('albums', ['newReleases' => $albums, 'title' => $title]);
     }
 
     public function genres()
@@ -100,17 +87,4 @@ class HomeController extends Controller
 
         return redirect()->route('subscribed');
     }
-
-    private function sortReleases($array)
-    {
-        krsort($array);
-        foreach ($array as $key => $item) {
-            usort($item, function ($a, $b) {
-                return $b->popularity - $a->popularity;
-            });
-            $array[$key] = $item;
-        }
-        return $array;
-    }
-
 }
