@@ -4,6 +4,20 @@
     </x-slot>
 
     <div>
+        @if($albums->hasPages())
+        <div class="flex justify-center mb-6">
+            @if(!$albums->onFirstPage())
+            <a href="{{ $albums->previousPageUrl() }}" class="flex bg-green text-black font-bold py-2 px-4 mx-2 rounded-full w-24 h-12 flex justify-center items-center">
+                <p>Prev</p>
+            </a>
+            @endif
+            @if($albums->hasMorePages())
+            <a href="{{ $albums->nextPageUrl() }}" class="flex bg-green text-black font-bold py-2 px-4 mx-2 rounded-full w-24 h-12 flex justify-center items-center">
+                <p>Next</p>
+            </a>
+            @endif
+        </div>
+        @endif
         @foreach($newReleases as $date => $dateNewReleases)
             <div>
                 <span class="p-2 bg-green border border-green rounded-full">{{ date("F d", strtotime($date)) }}</span>
@@ -32,6 +46,19 @@
                 </div>
             </div>
         @endforeach
-
+        @if($albums->hasPages())
+            <div class="flex justify-center mb-6">
+                @if(!$albums->onFirstPage())
+                <a href="{{ $albums->previousPageUrl() }}" class="flex bg-green text-black font-bold py-2 px-4 mx-2 rounded-full w-24 h-12 flex justify-center items-center">
+                    <p>Prev</p>
+                </a>
+                @endif
+                @if($albums->hasMorePages())
+                <a href="{{ $albums->nextPageUrl() }}" class="flex bg-green text-black font-bold py-2 px-4 mx-2 rounded-full w-24 h-12 flex justify-center items-center">
+                    <p>Next</p>
+                </a>
+                @endif
+            </div>
+        @endif
     </div>
 </x-layout>

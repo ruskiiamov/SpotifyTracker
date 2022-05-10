@@ -28,12 +28,12 @@ class HomeController extends Controller
             ->whereJsonContains('markets', $country)
             ->orderBy('release_date', 'desc')
             ->orderBy('popularity', 'desc')
-            ->get()
-            ->groupBy('release_date')
-            ->all();
+            ->paginate(config('spotifyConfig.pagination'));
+
+        $newReleases = $albums->groupby('release_date')->all();
 
         $title = 'followed artists';
-        return view('albums', ['newReleases' => $albums, 'title' => $title]);
+        return view('albums', ['newReleases' => $newReleases, 'albums' => $albums, 'title' => $title]);
     }
 
     public function subscribed()
@@ -51,12 +51,13 @@ class HomeController extends Controller
             ->whereJsonContains('markets', $country)
             ->orderBy('release_date', 'desc')
             ->orderBy('popularity', 'desc')
-            ->get()
-            ->groupBy('release_date')
-            ->all();
+            ->paginate(config('spotifyConfig.pagination'));
+
+        $newReleases = $albums->groupby('release_date')->all();
 
         $title = 'subscribed genres';
-        return view('albums', ['newReleases' => $albums, 'title' => $title]);
+
+        return view('albums', ['newReleases' => $newReleases, 'albums' => $albums, 'title' => $title]);
     }
 
     public function genres()
