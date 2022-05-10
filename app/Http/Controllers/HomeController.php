@@ -30,7 +30,9 @@ class HomeController extends Controller
             ->orderBy('popularity', 'desc')
             ->paginate(config('spotifyConfig.pagination'));
 
-        $newReleases = $albums->groupby('release_date')->all();
+        $newReleases = $albums->unique(function ($item) {
+            return $item['name'] . $item['artist_id'];
+        })->groupby('release_date');
 
         $title = 'followed artists';
         return view('albums', ['newReleases' => $newReleases, 'albums' => $albums, 'title' => $title]);
@@ -53,7 +55,9 @@ class HomeController extends Controller
             ->orderBy('popularity', 'desc')
             ->paginate(config('spotifyConfig.pagination'));
 
-        $newReleases = $albums->groupby('release_date')->all();
+        $newReleases = $albums->unique(function ($item) {
+            return $item['name'] . $item['artist_id'];
+        })->groupby('release_date');
 
         $title = 'subscribed genres';
 

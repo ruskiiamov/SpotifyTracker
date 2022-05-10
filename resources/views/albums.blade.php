@@ -35,7 +35,7 @@
                                     <p class="text-xl">{{ $newRelease->name }}</p>
                                 </div>
                                 <div>
-                                    @foreach($newRelease->artist->genres as $genre)<span class="mr-2 my-1 px-1 text-base text-white bg-green border border-green rounded-full inline-block">{{ $genre->name }}</span>@endforeach
+                                    @foreach($newRelease->artist->genres->unique() as $genre)<span class="mr-2 my-1 px-1 text-base text-white bg-green border border-green rounded-full inline-block">{{ $genre->name }}</span>@endforeach
                                 </div>
                                 <div>
                                     <span>popularity: {{$newRelease->popularity}}/100</span>
