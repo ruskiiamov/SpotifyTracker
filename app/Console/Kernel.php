@@ -26,11 +26,11 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        $schedule->command('app:queue-update-followed-artists')->everyTwoHours();
-        $schedule->command('app:queue-add-followed-albums')->everyTwoHours();
-        $schedule->command('app:queue-update-albums')->everyTwoHours();
-        $schedule->command('app:queue-clear-artists')->everyTwoHours();
-        $schedule->command('app:queue-add-new-releases')->everySixHours();
+        $schedule->command('app:queue-update-followed-artists')->hourly();
+        $schedule->command('app:queue-add-followed-albums')->hourly();
+        $schedule->command('app:queue-update-albums')->hourly();
+        $schedule->command('app:queue-clear-artists')->hourly();
+        $schedule->command('app:queue-add-new-releases')->everyThreeHours();
     }
 
     /**

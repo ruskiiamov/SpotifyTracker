@@ -4,6 +4,8 @@ return [
     'releaseAge' => 14, //days
     'checkAge' => 6, //hours
 
+    'pagination' => 20,
+
     'genreCategories' => [
         //genre category => key words
         'rock' => ['rock', 'grunge', 'britpop', 'surf', 'new wave', 'visual kei', 'shoegaze',

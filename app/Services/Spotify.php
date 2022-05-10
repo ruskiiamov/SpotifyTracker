@@ -124,7 +124,7 @@ class Spotify
     public function getLastArtistAlbum($accessToken, $artistId)
     {
         $parameters = [
-            //'include_groups' => 'album,single', //TODO ???
+            'include_groups' => 'album,single',
             'limit' => 1,
         ];
 
@@ -136,7 +136,7 @@ class Spotify
     public function getArtistAlbums($accessToken, $artistId)
     {
         $parameters = [
-            'include_groups' => 'album',
+            'include_groups' => 'album,single',
         ];
 
         $headers = ['Authorization' => 'Bearer ' . $accessToken];
