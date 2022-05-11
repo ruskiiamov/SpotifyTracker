@@ -512,14 +512,6 @@ Ensure the default browser behavior of the `hidden` attribute.
 .h-4 {
   height: 1rem;
 }
-.h-64 {
-  height: 16rem;
-}
-.max-h-fit {
-  max-height: -webkit-fit-content;
-  max-height: -moz-fit-content;
-  max-height: fit-content;
-}
 .min-h-screen {
   min-height: 100vh;
 }
@@ -543,9 +535,6 @@ Ensure the default browser behavior of the `hidden` attribute.
 .flex-none {
   flex: none;
 }
-.shrink {
-  flex-shrink: 1;
-}
 .cursor-pointer {
   cursor: pointer;
 }
@@ -568,9 +557,6 @@ Ensure the default browser behavior of the `hidden` attribute.
 }
 .flex-wrap {
   flex-wrap: wrap;
-}
-.place-content-center {
-  place-content: center;
 }
 .items-center {
   align-items: center;
@@ -656,6 +642,10 @@ Ensure the default browser behavior of the `hidden` attribute.
   padding-top: 1.5rem;
   padding-bottom: 1.5rem;
 }
+.px-2 {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
 .pl-1 {
   padding-left: 0.25rem;
 }
@@ -696,6 +686,9 @@ Ensure the default browser behavior of the `hidden` attribute.
 }
 .font-bold {
   font-weight: 700;
+}
+.uppercase {
+  text-transform: uppercase;
 }
 .text-white {
   --tw-text-opacity: 1;
