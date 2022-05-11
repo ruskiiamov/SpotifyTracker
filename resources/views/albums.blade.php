@@ -4,6 +4,13 @@
     </x-slot>
 
     <div>
+        <div class="flex flex-wrap justify-center mb-6">
+            @foreach($categories as $category)
+            <span class="mr-2 my-1 px-2 text-base uppercase text-white bg-green border border-green rounded-full inline-block">
+                {{ $category->name }}
+            </span>
+            @endforeach
+        </div>
         @if($albums->hasPages())
         <div class="flex justify-center mb-6">
             @if(!$albums->onFirstPage())

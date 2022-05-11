@@ -35,7 +35,11 @@ class HomeController extends Controller
         })->groupby('release_date');
 
         $title = 'followed artists';
-        return view('albums', ['newReleases' => $newReleases, 'albums' => $albums, 'title' => $title]);
+        return view('albums', [
+            'newReleases' => $newReleases,
+            'albums' => $albums,
+            'categories' => [],
+            'title' => $title]);
     }
 
     public function subscribed()
@@ -61,7 +65,12 @@ class HomeController extends Controller
 
         $title = 'subscribed genres';
 
-        return view('albums', ['newReleases' => $newReleases, 'albums' => $albums, 'title' => $title]);
+        return view('albums', [
+            'newReleases' => $newReleases,
+            'albums' => $albums,
+            'categories' => $user->categories,
+            'title' => $title
+        ]);
     }
 
     public function genres()
