@@ -1,6 +1,8 @@
 <x-layout>
     <x-slot name="header">
+        @if(!empty(auth()->user()))
         <a href="{{ route('logout') }}" class="font-bold text-white text-xl">Logout</a>
+        @endif
     </x-slot>
 
     <div>

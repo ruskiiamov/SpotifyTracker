@@ -76,4 +76,6 @@ return [
         'VN',
         'ZA'
     ],
+
+    'default_market' => 'US',
 ];

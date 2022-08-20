@@ -40,13 +40,10 @@ Route::get('/followed', [HomeController::class, 'followed'])
     ->name('followed');
 
 Route::get('/subscribed', [HomeController::class, 'subscribed'])
-    ->middleware('auth')
     ->name('subscribed');
 
 Route::get('/genres', [HomeController::class, 'genres'])
-    //->middleware('auth')
     ->name('genres');
 
 Route::post('/subscription', [HomeController::class, 'saveSubscriptions'])
-    ->middleware('auth')
     ->name('subscription');
