@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Facades\Spotify;
 use App\Models\Album;
 use App\Models\Category;
 use App\Models\Connection;
 use App\Models\Genre;
 use App\Models\Subscription;
 use App\Services\IpInfo;
+use App\Services\Tracker;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -43,7 +45,7 @@ class HomeController extends Controller
             'title' => $title]);
     }
 
-    public function subscribed(Request $request, IpInfo $location)
+    public function subscribed(Request $request, IpInfo $location, Tracker $tracker)
     {
         $user = Auth::user();
         if (!empty($user)) {
@@ -52,7 +54,7 @@ class HomeController extends Controller
             $categories = $user->categories;
             $followedArtistIds = $user->artists()->has('albums')->get()->pluck('id')->all();
         } else {
-            $country = $location->getCountryCode($request) ?? config('spotifyConfig.default_market');
+            $country = $this->processCountryCode($tracker, $location->getCountryCode($request));
             $categoryIds = session('subscriptions') ?? [];
             $categories = Category::whereIn('id', $categoryIds)->get();
             $followedArtistIds = [];
@@ -126,5 +128,19 @@ class HomeController extends Controller
         }
 
         return redirect()->route('subscribed');
+    }
+
+    /**
+     * @param Tracker $tracker
+     * @param string|null $countryCode
+     * @return string
+     */
+    private function processCountryCode(Tracker $tracker, string $countryCode = null): string
+    {
+        if (!isset($countryCode) || !in_array($countryCode, $tracker->getCurrentMarkets())) {
+            return config('spotifyConfig.default_market');
+        }
+
+        return $countryCode;
     }
 }

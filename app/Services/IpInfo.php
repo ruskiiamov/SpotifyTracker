@@ -16,7 +16,15 @@ class IpInfo
     public function getCountryCode(Request $request): ?string
     {
         $url = sprintf(self::URL_TEMPLATE, $request->ip());
-        $response = Http::get($url)->json();
+
+        for ($i = 0; $i < 3; $i++) {
+            try {
+                $response = Http::get($url)->json();
+                break;
+            } catch (\Exception $e) {
+                sleep(1);
+            }
+        }
 
         return $response['country'] ?? null;
     }

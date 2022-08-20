@@ -250,6 +250,22 @@ class Tracker
     }
 
     /**
+     * @return array
+     */
+    public function getCurrentMarkets(): array
+    {
+        $accessToken = $this->getClientAccessToken();
+
+        try {
+            $markets = Spotify::getMarkets($accessToken)->markets;
+        } catch (Exception $e) {
+
+        }
+
+        return $markets ?? [];
+    }
+
+    /**
      * @param string $accessToken
      * @param string $spotifyId
      * @return stdClass
