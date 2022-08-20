@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Connection;
 use App\Models\Genre;
 use App\Models\Subscription;
+use App\Services\IpInfo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -42,15 +43,23 @@ class HomeController extends Controller
             'title' => $title]);
     }
 
-    public function subscribed()
+    public function subscribed(Request $request, IpInfo $location)
     {
         $user = Auth::user();
-        $country = $user->country;
+        if (!empty($user)) {
+            $country = $user->country;
+            $categoryIds = $user->categories->pluck('id')->all();
+            $categories = $user->categories;
+            $followedArtistIds = $user->artists()->has('albums')->get()->pluck('id')->all();
+        } else {
+            $country = $location->getCountryCode($request) ?? config('spotifyConfig.default_market');
+            $categoryIds = session('subscriptions') ?? [];
+            $categories = Category::whereIn('id', $categoryIds)->get();
+            $followedArtistIds = [];
+        }
 
-        $categoryIds = $user->categories->pluck('id')->all();
         $genreIds = Genre::whereIn('category_id', $categoryIds)->get()->pluck('id')->all();
         $artistIds = Connection::whereIn('genre_id', $genreIds)->get()->unique('artist_id')->pluck('artist_id')->all();
-        $followedArtistIds = $user->artists()->has('albums')->get()->pluck('id')->all();
         $filteredArtistIds = array_diff($artistIds, $followedArtistIds);
 
         $albums = Album::whereIn('artist_id', $filteredArtistIds)
@@ -68,7 +77,7 @@ class HomeController extends Controller
         return view('albums', [
             'newReleases' => $newReleases,
             'albums' => $albums,
-            'categories' => $user->categories,
+            'categories' => $categories,
             'title' => $title
         ]);
     }
@@ -76,27 +85,44 @@ class HomeController extends Controller
     public function genres()
     {
         $user = Auth::user();
-        $subscriptions = $user->subscriptions;
-        $categories = Category::where('name', '<>', 'other')->orderBy('name')->get();
-        return view('genres', ['subscriptions' => $subscriptions, 'categories' => $categories]);
+
+        if (!empty($user)) {
+            $userCategories = $user->categories;
+        } else {
+            $subscriptions = session('subscriptions') ?? [];
+            $userCategories = Category::whereIn('id', $subscriptions)->get();
+        }
+
+        $allCategories = Category::where('name', '<>', 'other')->orderBy('name')->get();
+        return view('genres', ['userCategories' => $userCategories, 'allCategories' => $allCategories]);
     }
 
     public function saveSubscriptions(Request $request)
     {
         $user = Auth::user();
 
-        foreach ($request->except('_token') as $key => $item) {
-            if ($item) {
-                Subscription::firstOrCreate([
-                    'user_id' => $user->id,
-                    'category_id' => $key,
-                ]);
-            } else {
-                $subscription = Subscription::where('user_id', $user->id)->where('category_id', $key)->first();
-                if (!is_null($subscription)) {
-                    $subscription->delete();
+        if (!empty($user)) {
+            foreach ($request->except('_token') as $key => $item) {
+                if ($item) {
+                    Subscription::firstOrCreate([
+                        'user_id' => $user->id,
+                        'category_id' => $key,
+                    ]);
+                } else {
+                    $subscription = Subscription::where('user_id', $user->id)->where('category_id', $key)->first();
+                    if (!is_null($subscription)) {
+                        $subscription->delete();
+                    }
                 }
             }
+        } else {
+            $subscriptions = [];
+            foreach ($request->except('_token') as $categoryId => $value) {
+                if ($value == 1) {
+                    $subscriptions[] = $categoryId;
+                }
+            }
+            session(['subscriptions' => $subscriptions]);
         }
 
         return redirect()->route('subscribed');

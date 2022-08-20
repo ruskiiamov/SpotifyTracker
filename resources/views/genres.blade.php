@@ -1,6 +1,8 @@
 <x-layout>
     <x-slot name="header">
+        @if(!empty(auth()->user()))
         <a href="{{ route('logout') }}" class="font-bold text-white text-xl">Logout</a>
+        @endif
     </x-slot>
 
     <div>
@@ -8,11 +10,11 @@
         <form method="post" action="{{ route('subscription') }}" >
             @csrf
             <div class="grid grid-cols-2 gap-y-8 gap-x-16 pb-8">
-                @foreach($categories as $category)
+                @foreach($allCategories as $category)
                     <div class="flex justify-center items-center">
                         <input type="hidden" name="{{ $category->id }}" value="0">
                         <input type="checkbox" name="{{ $category->id }}" id="{{ $category->id }}" value="1" class="peer appearance-none"
-                            @if(!is_null($subscriptions->where('category_id', $category->id)->first()))
+                            @if($userCategories->contains($category))
                             checked
                             @endif
                         >
