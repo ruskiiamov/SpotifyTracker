@@ -225,12 +225,19 @@ class Tracker
     }
 
     /**
+     * @param string|null $categoryName
      * @return array
      */
-    public function genresAnalyse(): array
+    public function genresAnalyse(string $categoryName = null): array
     {
         $words = [];
-        $genres = Genre::all();
+
+        if (isset($categoryName) && Category::where('name', $categoryName)->exists()) {
+            $genres = Category::where('name', $categoryName)->first()->genres;
+        } else {
+            $genres = Genre::all();
+        }
+
         foreach ($genres as $genre) {
             $separated = explode(' ', strtolower($genre->name));
             foreach ($separated as $item) {
@@ -258,11 +265,21 @@ class Tracker
 
         try {
             $markets = Spotify::getMarkets($accessToken)->markets;
-        } catch (Exception $e) {
-
-        }
+        } catch (Exception $e) {}
 
         return $markets ?? [];
+    }
+
+    public function categorizeGenres(): void
+    {
+        Genre::chunk(200, function ($genres) {
+            foreach ($genres as $genre) {
+                $categoryName = $this->getGenreCategory($genre->name);
+                if ($genre->category->name != $categoryName) {
+                    $genre->update(['category_id' => Category::where('name', $categoryName)->first()->id]);
+                }
+            }
+        });
     }
 
     /**
@@ -308,7 +325,7 @@ class Tracker
         foreach ($genreNames as $genreName) {
             $genre = Genre::firstOrCreate(
                 ['name' => $genreName],
-                ['category_id' => Category::where('name', $this->setGenreCategory($genreName))->first()->id],
+                ['category_id' => Category::where('name', $this->getGenreCategory($genreName))->first()->id],
             );
 
             if ($artist->genres()->where('name', $genre)->doesntExist()) {
@@ -329,7 +346,7 @@ class Tracker
      * @param string $genre
      * @return string
      */
-    private function setGenreCategory(string $genre): string
+    private function getGenreCategory(string $genre): string
     {
         foreach ($this->genreCategories as $genreCategory => $keyWords) {
             foreach ($keyWords as $keyWord) {

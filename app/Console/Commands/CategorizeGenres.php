@@ -7,21 +7,21 @@ namespace App\Console\Commands;
 use App\Services\Tracker;
 use Illuminate\Console\Command;
 
-class GenresAnalyse extends Command
+class CategorizeGenres extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'app:genres-analyse {categoryName?}';
+    protected $signature = 'app:categorize-genres';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Analyse most repeated words in genre titles';
+    protected $description = 'Categorize all genres in DB';
 
     /**
      * Create a new command instance.
@@ -36,14 +36,9 @@ class GenresAnalyse extends Command
     /**
      * Execute the console command.
      *
-     * @param Tracker $tracker
-     * @return void
      */
     public function handle(Tracker $tracker)
     {
-        $categoryName = $this->argument('categoryName') ?? null;
-
-        $words = $tracker->genresAnalyse($categoryName);
-        $this->table(['Word', 'Frequency'], $words);
+        $tracker->categorizeGenres();
     }
 }
