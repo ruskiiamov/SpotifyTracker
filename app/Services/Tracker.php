@@ -328,7 +328,7 @@ class Tracker
                 ['category_id' => Category::where('name', $this->getGenreCategory($genreName))->first()->id],
             );
 
-            if ($artist->genres()->where('name', $genre)->doesntExist()) {
+            if ($artist->genres()->where('name', $genreName)->doesntExist()) {
                 $artist->genres()->attach($genre->id);
             }
         }
