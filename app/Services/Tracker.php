@@ -22,12 +22,14 @@ class Tracker
      * @param array $genreCategories
      * @param array $exceptions
      * @param array $artistIdExceptions
+     * @param array $bannedGenreNames
      */
     public function __construct(
         private int $releaseAge,
         private array $genreCategories,
         private array $exceptions,
         private array $artistIdExceptions,
+        private array $bannedGenreNames
     ) {}
 
     /**
@@ -189,6 +191,10 @@ class Tracker
                     }
 
                     $fullArtist = Spotify::getArtist($accessToken, $artistSpotifyId);
+                    if (empty($fullArtist->genres) || !$this->areGenresOk($fullArtist->genres)) {
+                        continue;
+                    }
+
                     $artist = Artist::where('spotify_id', $fullArtist->id)->first();
 
                     if (!isset($artist)) {
@@ -225,38 +231,6 @@ class Tracker
     }
 
     /**
-     * @param string|null $categoryName
-     * @return array
-     */
-    public function genresAnalyse(string $categoryName = null): array
-    {
-        $words = [];
-
-        if (isset($categoryName) && Category::where('name', $categoryName)->exists()) {
-            $genres = Category::where('name', $categoryName)->first()->genres;
-        } else {
-            $genres = Genre::all();
-        }
-
-        foreach ($genres as $genre) {
-            $separated = explode(' ', strtolower($genre->name));
-            foreach ($separated as $item) {
-                if (array_key_exists($item, $words)) {
-                    $words[$item]++;
-                } else {
-                    $words[$item] = 1;
-                }
-            }
-        }
-        arsort($words);
-        $result[] = [];
-        foreach ($words as $word => $amount) {
-            $result[] = [$word, $amount];
-        }
-        return $result;
-    }
-
-    /**
      * @return array
      */
     public function getCurrentMarkets(): array
@@ -268,18 +242,6 @@ class Tracker
         } catch (Exception $e) {}
 
         return $markets ?? [];
-    }
-
-    public function categorizeGenres(): void
-    {
-        Genre::chunk(200, function ($genres) {
-            foreach ($genres as $genre) {
-                $categoryName = $this->getGenreCategory($genre->name);
-                if ($genre->category->name != $categoryName) {
-                    $genre->update(['category_id' => Category::where('name', $categoryName)->first()->id]);
-                }
-            }
-        });
     }
 
     /**
@@ -323,6 +285,9 @@ class Tracker
         }
 
         foreach ($genreNames as $genreName) {
+            if (in_array($genreName, $this->bannedGenreNames)) {
+                continue;
+            }
             $genre = Genre::firstOrCreate(
                 ['name' => $genreName],
                 ['category_id' => Category::where('name', $this->getGenreCategory($genreName))->first()->id],
@@ -346,7 +311,7 @@ class Tracker
      * @param string $genre
      * @return string
      */
-    private function getGenreCategory(string $genre): string
+    public function getGenreCategory(string $genre): string
     {
         foreach ($this->genreCategories as $genreCategory => $keyWords) {
             foreach ($keyWords as $keyWord) {
@@ -355,7 +320,7 @@ class Tracker
                 }
             }
         }
-        return 'other';
+        return 'Other';
     }
 
     /**
@@ -392,5 +357,19 @@ class Tracker
         }
 
         return Spotify::getClientAccessToken();
+    }
+
+    /**
+     * @param array $genres
+     * @return bool
+     */
+    private function areGenresOk(array $genres): bool
+    {
+        foreach ($genres as $genre) {
+            if (!in_array($genre, $this->bannedGenreNames)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
