@@ -40,8 +40,8 @@ class ShowArtistsWithMissedGenres extends Command
 
         MissedGenresArtist::chunk(200, function ($artists) use (&$data) {
             foreach ($artists as $artist) {
-                foreach ($artist->genres as $genre) {
-                    $data[] = [$artist->name, $genre->name];
+                foreach ($artist->genre_names as $genreName) {
+                    $data[] = [$artist->artist_name, $genreName];
                 }
             }
         });
