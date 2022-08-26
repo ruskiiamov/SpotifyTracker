@@ -31,6 +31,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('app:queue-update-albums')->hourly();
         $schedule->command('app:queue-clear-artists')->hourly();
         $schedule->command('app:queue-add-new-releases')->everyThreeHours();
+        $schedule->command('app:scan-artists-with-missed-genres')->daily();
     }
 
     /**

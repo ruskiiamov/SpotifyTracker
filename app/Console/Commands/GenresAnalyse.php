@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Services\Tracker;
+use App\Models\Category;
+use App\Models\Genre;
 use Illuminate\Console\Command;
 
 class GenresAnalyse extends Command
@@ -36,14 +37,36 @@ class GenresAnalyse extends Command
     /**
      * Execute the console command.
      *
-     * @param Tracker $tracker
      * @return void
      */
-    public function handle(Tracker $tracker)
+    public function handle()
     {
         $categoryName = $this->argument('categoryName') ?? null;
 
-        $words = $tracker->genresAnalyse($categoryName);
-        $this->table(['Word', 'Frequency'], $words);
+        $words = [];
+
+        if (isset($categoryName) && Category::where('name', $categoryName)->exists()) {
+            $genres = Category::where('name', $categoryName)->first()->genres;
+        } else {
+            $genres = Genre::lazy();
+        }
+
+        foreach ($genres as $genre) {
+            $separated = explode(' ', strtolower($genre->name));
+            foreach ($separated as $item) {
+                if (array_key_exists($item, $words)) {
+                    $words[$item]++;
+                } else {
+                    $words[$item] = 1;
+                }
+            }
+        }
+        arsort($words);
+        $result[] = [];
+        foreach ($words as $word => $amount) {
+            $result[] = [$word, $amount];
+        }
+
+        $this->table(['Word', 'Frequency'], $result);
     }
 }

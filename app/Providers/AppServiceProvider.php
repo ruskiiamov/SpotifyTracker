@@ -20,6 +20,7 @@ class AppServiceProvider extends ServiceProvider
                 genreCategories: config('spotifyConfig.genreCategories'),
                 exceptions: config('spotifyConfig.exceptions'),
                 artistIdExceptions: config('spotifyConfig.artistIdExceptions'),
+                bannedGenreNames: config('spotifyConfig.bannedGenreNames')
             );
         });
     }

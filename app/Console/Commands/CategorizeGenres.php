@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Models\Category;
+use App\Models\Genre;
+use App\Models\MissedGenresArtist;
 use App\Services\Tracker;
 use Illuminate\Console\Command;
 
@@ -39,6 +42,25 @@ class CategorizeGenres extends Command
      */
     public function handle(Tracker $tracker)
     {
-        $tracker->categorizeGenres();
+        $bannedGenreNames = config('spotifyConfig.bannedGenreNames');
+
+        Genre::chunk(200, function ($genres) use ($bannedGenreNames, $tracker) {
+            foreach ($genres as $genre) {
+                if (in_array($genre->name, $bannedGenreNames)) {
+                    $genre->artists()->detach();
+                    $genre->delete();
+                    continue;
+                }
+
+                $categoryName = $tracker->getGenreCategory($genre->name);
+                if ($genre->category->name != $categoryName) {
+                    $genre->update(['category_id' => Category::where('name', $categoryName)->first()->id]);
+                }
+
+                if ($categoryName != 'Other') {
+                    MissedGenresArtist::whereJsonContains('genre_names', $genre->name)->delete();
+                }
+            }
+        });
     }
 }

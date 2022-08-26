@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Facades\Spotify;
 use App\Models\Album;
 use App\Models\Category;
 use App\Models\Connection;
@@ -95,7 +94,7 @@ class HomeController extends Controller
             $userCategories = Category::whereIn('id', $subscriptions)->get();
         }
 
-        $allCategories = Category::where('name', '<>', 'other')->orderBy('name')->get();
+        $allCategories = Category::where('name', '<>', 'Other')->orderBy('name')->get();
         return view('genres', ['userCategories' => $userCategories, 'allCategories' => $allCategories]);
     }
 
