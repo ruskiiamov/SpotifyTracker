@@ -48,6 +48,21 @@ class CategorizeGenres extends Command
             foreach ($genres as $genre) {
                 if (in_array($genre->name, $bannedGenreNames)) {
                     $genre->artists()->detach();
+
+                    MissedGenresArtist::whereJsonContains('genre_names', $genre->name)
+                        ->chunk(50, function ($artists) use ($genre) {
+                            foreach ($artists as $artist) {
+                                $missedGenres = $artist->genre_names;
+                                $key = array_search($genre->name, $missedGenres);
+                                array_splice($missedGenres, $key, 1);
+                                if (empty($missedGenres)) {
+                                    $artist->delete();
+                                } else {
+                                    $artist->update(['genre_names' => $missedGenres]);
+                                }
+                            }
+                        });
+
                     $genre->delete();
                     continue;
                 }
