@@ -26,12 +26,14 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        $schedule->command('app:queue-update-followed-artists')->hourly();
-        $schedule->command('app:queue-add-followed-albums')->hourly();
-        $schedule->command('app:queue-update-albums')->hourly();
-        $schedule->command('app:queue-clear-artists')->hourly();
-        $schedule->command('app:queue-add-new-releases')->everyThreeHours();
-        $schedule->command('app:scan-artists-with-missed-genres')->daily();
+        if (config('schedule.enabled')) {
+            $schedule->command('app:queue-update-followed-artists')->hourly();
+            $schedule->command('app:queue-add-followed-albums')->hourly();
+            $schedule->command('app:queue-update-albums')->hourly();
+            $schedule->command('app:queue-clear-artists')->hourly();
+            $schedule->command('app:queue-add-new-releases')->everyThreeHours();
+            $schedule->command('app:scan-artists-with-missed-genres')->daily();
+        }
     }
 
     /**
