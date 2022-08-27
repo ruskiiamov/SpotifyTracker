@@ -139,10 +139,19 @@ class Tracker
             $albumSpotifyId = $album->spotify_id;
             $fullAlbum = Spotify::getAlbum($accessToken, $albumSpotifyId);
             $popularity = $fullAlbum->popularity;
+            $markets = json_encode($fullAlbum->available_markets, JSON_UNESCAPED_UNICODE);
+            $image = $fullAlbum->images[1]->url;
             if ($popularity != $album->popularity) {
                 $album->popularity = $popularity;
+            }
+            if ($markets != $album->markets) {
+                $album->markets = $markets;
+            }
+            if ($album->image != $image) {
+                $album->image = $image;
+            }
+            if ($album->wasChanged()) {
                 $album->save();
-
             }
         }
     }
