@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Facades\Spotify;
 use App\Jobs\UpdateUserFollowedArtists;
 use App\Models\User;
 use Exception;
@@ -43,14 +44,16 @@ class UpdateFollowedArtists extends Command
      */
     public function handle()
     {
-        User::chunk(200, function ($users) {
-            foreach ($users as $user) {
-                try {
-                    UpdateUserFollowedArtists::dispatch($user);
-                } catch (Exception $e) {
-                    Log::error($e->getMessage(), ['method' => __METHOD__, 'user_id' => $user->id]);
+        if (Spotify::areRequestsAvailable()) {
+            User::chunk(200, function ($users) {
+                foreach ($users as $user) {
+                    try {
+                        UpdateUserFollowedArtists::dispatch($user);
+                    } catch (Exception $e) {
+                        Log::error($e->getMessage(), ['method' => __METHOD__, 'user_id' => $user->id]);
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 }

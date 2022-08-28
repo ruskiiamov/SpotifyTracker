@@ -2,8 +2,12 @@
 
 namespace App\Services;
 
+use App\Exceptions\SpotifyRequestException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
 
 class Spotify
 {
@@ -184,6 +188,12 @@ class Spotify
         return $this->request('GET', $this->apiUrl . '/markets', [], $headers);
     }
 
+    public function areRequestsAvailable()
+    {
+        $availableSince = Cache::get('spotify-requests-available-since', 0);
+        return time() > $availableSince;
+    }
+
     private function createState()
     {
         $state = uniqid(rand(), true);
@@ -193,33 +203,51 @@ class Spotify
 
     private function request($method, $url, $parameters = [], $headers = [])
     {
-        $parameters = http_build_query($parameters, '', '&');
+        for ($i = 1; $i <= 3; $i++) {
+            $request = Http::withHeaders($headers)->asForm();
 
-        $options = [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPHEADER => [],
-        ];
+            while (true) {
+                if (RateLimiter::remaining('spotify-request', config('spotifyConfig.requestRateLimitAttempts'))) {
+                    RateLimiter::hit('spotify-request', config('spotifyConfig.requestRateLimitDecay'));
 
-        foreach ($headers as $key => $val) {
-            $options[CURLOPT_HTTPHEADER][] = "{$key}: {$val}";
+                    switch ($method) {
+                        case 'GET':
+                            $response = $request->get($url, $parameters);
+                            break;
+                        case 'POST':
+                            $response = $request->post($url, $parameters);
+                            break;
+                        default:
+                            throw new \Exception('Wrong method: ' . $method);
+                    }
+
+                    break;
+                } else {
+                    $seconds = RateLimiter::availableIn('spotify-request');
+                    Log::info('Spotify Request: Rate limiter sleep: ' . $seconds);
+                    sleep($seconds);
+                }
+            }
+
+            if ($response->successful()) {
+                return $response->object();
+            } else {
+                Log::error('Spotify Request: ' . $response->status() . ' - ' . $method . ' ' . $url);
+                if ($response->status() != 429) {
+                    throw new SpotifyRequestException($response->status() . ' - ' . $method . ' ' . $url);
+                } else {
+                    $retryAfter = $response->header('Retry-After') ?? 0;
+                    Log::info('Spotify Request: Retry-After=' . $retryAfter . ' seconds');
+                    if ($retryAfter <= 60) {
+                        sleep($retryAfter + 1);
+                    } else {
+                        Cache::put('spotify-requests-available-since', time() + $retryAfter);
+                        throw new SpotifyRequestException('Retry-After time is too big: ' . $retryAfter . ' - ' . $method . ' ' . $url);
+                    }
+                }
+            }
         }
-
-        if ($method == 'GET') {
-            $options[CURLOPT_URL] = $url . $parameters;
-        }
-
-        if ($method == 'POST') {
-            $options[CURLOPT_URL] = $url;
-            $options[CURLOPT_POST] = true;
-            $options[CURLOPT_POSTFIELDS] = $parameters;
-        }
-
-        $ch = curl_init();
-        curl_setopt_array($ch, $options);
-        $response = json_decode(curl_exec($ch));
-        curl_close($ch);
-
-        return $response;
+        throw new SpotifyRequestException('Retry limit exceed - ' . $method . ' ' . $url);
     }
 
     private function saveAccessToken($accessToken, $expires_in)

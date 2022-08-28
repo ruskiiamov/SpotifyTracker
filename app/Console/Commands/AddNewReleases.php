@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Facades\Spotify;
 use App\Jobs\AddNewReleases as AddNewReleasesJob;
 use Exception;
 use Illuminate\Console\Command;
@@ -50,12 +51,14 @@ class AddNewReleases extends Command
      */
     public function handle()
     {
-        foreach ($this->markets as $market) {
-            try {
-                AddNewReleasesJob::dispatch('new', $market);//TODO change to enum
-                AddNewReleasesJob::dispatch('hipster', $market);
-            } catch (Exception $e) {
-                Log::error($e->getMessage(), ['method' => __METHOD__]);
+        if (Spotify::areRequestsAvailable()) {
+            foreach ($this->markets as $market) {
+                try {
+                    AddNewReleasesJob::dispatch('new', $market);//TODO change to enum
+                    AddNewReleasesJob::dispatch('hipster', $market);
+                } catch (Exception $e) {
+                    Log::error($e->getMessage(), ['method' => __METHOD__]);
+                }
             }
         }
     }

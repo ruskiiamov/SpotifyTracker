@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Facades\Spotify;
 use App\Jobs\UpdateAlbum;
 use App\Models\Album;
 use Exception;
@@ -43,14 +44,16 @@ class UpdateAlbums extends Command
      */
     public function handle()
     {
-        Album::chunk(200, function ($albums) {
-            foreach ($albums as $album) {
-                try {
-                    UpdateAlbum::dispatch($album);
-                } catch (Exception $e) {
-                    Log::error($e->getMessage(), ['method' => __METHOD__, 'album_id' => $album->id]);
+        if (Spotify::areRequestsAvailable()) {
+            Album::chunk(200, function ($albums) {
+                foreach ($albums as $album) {
+                    try {
+                        UpdateAlbum::dispatch($album);
+                    } catch (Exception $e) {
+                        Log::error($e->getMessage(), ['method' => __METHOD__, 'album_id' => $album->id]);
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 }

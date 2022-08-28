@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Facades\Spotify;
 use App\Jobs\AddLastArtistAlbum;
 use App\Models\Artist;
 use Exception;
@@ -52,19 +53,21 @@ class AddFollowedAlbums extends Command
      */
     public function handle()
     {
-        $checkThreshold = $this->getCheckDateTimeThreshold();
+        if (Spotify::areRequestsAvailable()) {
+            $checkThreshold = $this->getCheckDateTimeThreshold();
 
-        Artist::has('followings')
-            ->where('checked_at', '<', $checkThreshold)
-            ->chunkById(200, function ($artists) {
-                foreach ($artists as $artist) {
-                    try {
-                        AddLastArtistAlbum::dispatch($artist);
-                    } catch (Exception $e) {
-                        Log::error($e->getMessage(), ['method' => __METHOD__, 'artist_id' => $artist->id,]);
+            Artist::has('followings')
+                ->where('checked_at', '<', $checkThreshold)
+                ->chunkById(200, function ($artists) {
+                    foreach ($artists as $artist) {
+                        try {
+                            AddLastArtistAlbum::dispatch($artist);
+                        } catch (Exception $e) {
+                            Log::error($e->getMessage(), ['method' => __METHOD__, 'artist_id' => $artist->id,]);
+                        }
                     }
-                }
-            });
+                });
+        }
     }
 
     /**

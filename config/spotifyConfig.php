@@ -1,6 +1,9 @@
 <?php
 
 return [
+    'requestRateLimitAttempts' => 100,
+    'requestRateLimitDecay' => 10, //seconds
+
     'releaseAge' => 14, //days
     'checkAge' => 6, //hours
 
