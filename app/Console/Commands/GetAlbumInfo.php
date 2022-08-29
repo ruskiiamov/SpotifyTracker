@@ -13,7 +13,7 @@ class GetAlbumInfo extends Command
      *
      * @var string
      */
-    protected $signature = 'app:get-album-info {album_id}';
+    protected $signature = 'app:get-album-info {album_id} {field?}';
 
     /**
      * The console command description.
@@ -39,7 +39,7 @@ class GetAlbumInfo extends Command
     public function handle()
     {
         $albumId = $this->argument('album_id');
-        $field = 'available_markets';
+        $field = $this->argument('field') ?? null;
 
         if (!isset($albumId)) {
             $this->error('Album id required');
@@ -54,6 +54,10 @@ class GetAlbumInfo extends Command
 
         $fullAlbum = Spotify::getAlbum($accessToken, $albumId);
 
-        print_r($fullAlbum->$field);
+        if (isset($field)) {
+            $this->info(print_r($fullAlbum->$field, true));
+        } else {
+            $this->info(print_r($fullAlbum, true));
+        }
     }
 }
