@@ -150,7 +150,7 @@ class Tracker
             if ($album->image != $image) {
                 $album->image = $image;
             }
-            if ($album->wasChanged()) {
+            if ($album->isDirty()) {
                 $album->save();
             }
         }
