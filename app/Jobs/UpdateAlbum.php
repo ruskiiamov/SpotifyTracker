@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
+use App\Facades\Spotify;
 use App\Models\Album;
 use App\Services\Tracker;
 use Exception;
@@ -53,10 +54,12 @@ class UpdateAlbum implements ShouldQueue
      */
     public function handle(Tracker $tracker)
     {
-        try {
-            $tracker->updateAlbum($this->album);
-        } catch (Exception $e) {
-            Log::error($e->getMessage(), ['method' => __METHOD__, 'album_id' => $this->album->id]);
+        if (Spotify::areRequestsAvailable()) {
+            try {
+                $tracker->updateAlbum($this->album);
+            } catch (Exception $e) {
+                Log::error($e->getMessage(), ['method' => __METHOD__, 'album_id' => $this->album->id]);
+            }
         }
     }
 }

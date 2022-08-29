@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
+use App\Facades\Spotify;
 use App\Services\Tracker;
 use Exception;
 use Illuminate\Bus\Queueable;
@@ -54,14 +55,16 @@ class AddNewReleases implements ShouldQueue
      */
     public function handle(Tracker $tracker)
     {
-        try {
-            $tracker->addNewReleases($this->searchTag, $this->market);
-        } catch (Exception $e) {
-            Log::error($e->getMessage(), [
-                'method' => __METHOD__,
-                'search_tag' => $this->searchTag,
-                'marker' => $this->market,
-            ]);
+        if (Spotify::areRequestsAvailable()) {
+            try {
+                $tracker->addNewReleases($this->searchTag, $this->market);
+            } catch (Exception $e) {
+                Log::error($e->getMessage(), [
+                    'method' => __METHOD__,
+                    'search_tag' => $this->searchTag,
+                    'marker' => $this->market,
+                ]);
+            }
         }
     }
 }

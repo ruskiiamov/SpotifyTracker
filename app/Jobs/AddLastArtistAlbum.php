@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
+use App\Facades\Spotify;
 use App\Models\Artist;
 use App\Services\Tracker;
 use Exception;
@@ -53,10 +54,12 @@ class AddLastArtistAlbum implements ShouldQueue
      */
     public function handle(Tracker $tracker)
     {
-        try {
-            $tracker->addLastArtistAlbum($this->artist);
-        } catch (Exception $e) {
-            Log::error($e->getMessage(), ['method' => __METHOD__, 'artist_id' => $this->artist->id,]);
+        if (Spotify::areRequestsAvailable()) {
+            try {
+                $tracker->addLastArtistAlbum($this->artist);
+            } catch (Exception $e) {
+                Log::error($e->getMessage(), ['method' => __METHOD__, 'artist_id' => $this->artist->id,]);
+            }
         }
     }
 }

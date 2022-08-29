@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
+use App\Facades\Spotify;
 use App\Models\User;
 use App\Services\Tracker;
 use Exception;
@@ -62,25 +63,32 @@ class AfterFirstLogin implements ShouldQueue
      */
     public function handle(Tracker $tracker)
     {
-        try {
-            $tracker->updateUserFollowedArtists($this->user);
-        } catch (Exception $e) {
-            Log::error($e->getMessage(), ['method' => __METHOD__, 'user_id' => $this->user->id]);
-        }
-
-        $checkThreshold = $this->getCheckDateTimeThreshold();
-
-        $this->user->artists()
-            ->where('checked_at', '<', $checkThreshold)
-            ->chunkById(200, function ($artists) {
-                foreach ($artists as $artist) {
-                    try {
-                        AddLastArtistAlbum::dispatch($artist)->onQueue('high');
-                    } catch (Exception $e) {
-                        Log::error($e->getMessage(), ['method' => __METHOD__, 'artist_id' => $artist->id]);
-                    }
+        while (true) {
+            if (Spotify::areRequestsAvailable()) {
+                try {
+                    $tracker->updateUserFollowedArtists($this->user);
+                } catch (Exception $e) {
+                    Log::error($e->getMessage(), ['method' => __METHOD__, 'user_id' => $this->user->id]);
                 }
-            });
+
+                $checkThreshold = $this->getCheckDateTimeThreshold();
+
+                $this->user->artists()
+                    ->where('checked_at', '<', $checkThreshold)
+                    ->chunkById(200, function ($artists) {
+                        foreach ($artists as $artist) {
+                            try {
+                                AddLastArtistAlbum::dispatch($artist)->onQueue('high');
+                            } catch (Exception $e) {
+                                Log::error($e->getMessage(), ['method' => __METHOD__, 'artist_id' => $artist->id]);
+                            }
+                        }
+                    });
+                return;
+            } else {
+                sleep(300);
+            }
+        }
     }
 
     /**

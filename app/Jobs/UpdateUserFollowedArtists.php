@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
+use App\Facades\Spotify;
 use App\Models\User;
 use App\Services\Tracker;
 use Exception;
@@ -53,10 +54,12 @@ class UpdateUserFollowedArtists implements ShouldQueue
      */
     public function handle(Tracker $tracker)
     {
-        try {
-            $tracker->updateUserFollowedArtists($this->user);
-        } catch (Exception $e) {
-            Log::error($e->getMessage(), ['method' => __METHOD__, 'user_id' => $this->user->id]);
+        if (Spotify::areRequestsAvailable()) {
+            try {
+                $tracker->updateUserFollowedArtists($this->user);
+            } catch (Exception $e) {
+                Log::error($e->getMessage(), ['method' => __METHOD__, 'user_id' => $this->user->id]);
+            }
         }
     }
 }
