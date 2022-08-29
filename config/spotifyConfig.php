@@ -13,11 +13,11 @@ return [
         //genre category => key words
         'Pop' => ['pop', 'singer-songwriter', 'j-pixie', 'j-acoustic', 'anime', 'schlager', 'chanson', 'contemporanea',
             'manele', 'cantautora', 'cantautor', 'francoton', 'laulaja-lauluntekija', 'disco', 'dancehall', 'afrobeat',
-            'latintronica', 'aussietronica', 'ethnotronica'],
-        'Hip hop' => ['hip hop', 'rap', 'phonk', 'drain', 'drill', 'urbano', 'psychokore', 'lo-fi', 'zxc', 'rep',
-            'boom bap', 'chillhop', 'funk mtg'],
+            'latintronica', 'aussietronica', 'ethnotronica', 'diva'],
+        'Hip hop' => ['hip hop', 'rap', 'phonk', 'drain', 'drill', 'urbano', 'psychokore', 'lo-fi beat', 'zxc', 'rep',
+            'boom bap', 'chillhop', 'funk mtg', 'russian rave', 'funk consciente', 'funk ostentacao', 'funk paulista'],
         'Electronic' => ['trance', 'edm', 'house', 'techno', 'drum and bass', 'dnb', 'synth', 'electro',
-            'amapiano', 'clubbing', 'rave', 'future bass', 'dubstep', 'big beat', 'intelligent dance music', 'glitch'],
+            'amapiano', 'clubbing', 'future bass', 'dubstep', 'big beat', 'intelligent dance music', 'glitch'],
         'Latin/Afro-Cuban' => ['latin', 'axe', 'forro', 'mpb', 'cuarteto', 'pagode', 'samba', 'mexicana', 'ranchera',
             'rumba', 'grupera', 'corrido', 'sungura', 'perreo', 'cumbia', 'tango', 'carioca', 'norteno', 'bossa nova'],
         'Jazz' => ['jazz'],
@@ -46,7 +46,7 @@ return [
         'german soundtrack', 'brain waves', 'korean instrumental', 'dinner jazz', 'music box', 'slowed and reverb',
         'binaural', 'bornehistorier', 'jirai kei', 'erotic product', 'puirt-a-beul', 'massage', 'zen', 'mindfulness',
         'classic bollywood', 'filmi', 'modern bollywood', 'meditation', 'ilahiler', 'lesen', 'liedermacher',
-        'disney piano', 'easy listening', 'lounge'],
+        'disney piano', 'easy listening', 'lounge', 'therapy'],
 
     //banned words in album names
     'exceptions' => ['live', 'remix', 'anniversary', 'deluxe', 'expanded', 'instrumentals', 'best', 'soundtrack',
@@ -69,6 +69,7 @@ return [
         '3jmd2RL8vGnluearHualn2', //Coffee Shop Jazz Piano Chilling
         '21p1cEg5BT8TCSYIlV3k7M', //Easy Listening Background Music
 //        '5ihY290YPGc3aY2xTyx7Gy', //Edvard Grieg
+        '7iUy9ctasMRtp5jwWs95Fm', //Lo-Fi Beats
     ],
 
     'markets' => [
