@@ -27,13 +27,13 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         if (config('schedule.enabled')) {
-            $schedule->command('app:queue-update-followed-artists')->everyTwoHours();;
-            $schedule->command('app:queue-add-followed-albums')->everySixHours();;
-            $schedule->command('app:queue-update-albums')->twiceDaily(9, 13);
+            $schedule->command('app:queue-update-followed-artists')->everySixHours();
+            $schedule->command('app:queue-add-followed-albums')->everySixHours();
+            $schedule->command('app:queue-update-albums')->twiceDaily(2, 14);
             $schedule->command('app:queue-clear-artists')->daily();
-            $schedule->command('app:queue-add-new-releases')->twiceDaily(8, 12);
+            $schedule->command('app:queue-add-new-releases')->twiceDaily(1, 13);
             $schedule->command('app:scan-artists-with-missed-genres')->daily();
-            $schedule->command('app:rate-limit-check')->everyThirtyMinutes();;
+            $schedule->command('app:rate-limit-check')->everyThirtyMinutes();
         }
     }
 
