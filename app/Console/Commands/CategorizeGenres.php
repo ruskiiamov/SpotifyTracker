@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Models\Category;
+use App\Interfaces\GenreCategorizerInterface;
 use App\Models\Genre;
-use App\Models\MissedGenresArtist;
-use App\Services\Tracker;
 use Illuminate\Console\Command;
 
 class CategorizeGenres extends Command
@@ -40,41 +38,11 @@ class CategorizeGenres extends Command
      * Execute the console command.
      *
      */
-    public function handle(Tracker $tracker)
+    public function handle(GenreCategorizerInterface $genreCategorizer)
     {
-        $bannedGenreNames = config('spotifyConfig.bannedGenreNames');
-
-        Genre::chunk(200, function ($genres) use ($bannedGenreNames, $tracker) {
+        Genre::chunk(200, function ($genres) use ($genreCategorizer) {
             foreach ($genres as $genre) {
-                if (in_array($genre->name, $bannedGenreNames)) {
-                    $genre->artists()->detach();
-
-                    MissedGenresArtist::whereJsonContains('genre_names', $genre->name)
-                        ->chunk(50, function ($artists) use ($genre) {
-                            foreach ($artists as $artist) {
-                                $missedGenres = $artist->genre_names;
-                                $key = array_search($genre->name, $missedGenres);
-                                array_splice($missedGenres, $key, 1);
-                                if (empty($missedGenres)) {
-                                    $artist->delete();
-                                } else {
-                                    $artist->update(['genre_names' => $missedGenres]);
-                                }
-                            }
-                        });
-
-                    $genre->delete();
-                    continue;
-                }
-
-                $categoryName = $tracker->getGenreCategory($genre->name);
-                if ($genre->category->name != $categoryName) {
-                    $genre->update(['category_id' => Category::where('name', $categoryName)->first()->id]);
-                }
-
-                if ($categoryName != 'Other') {
-                    MissedGenresArtist::whereJsonContains('genre_names', $genre->name)->delete();
-                }
+                $genreCategorizer->categorize($genre);
             }
         });
     }

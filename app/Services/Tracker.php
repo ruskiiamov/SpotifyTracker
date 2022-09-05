@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Interfaces\GenreCategorizerInterface;
 use App\Models\Album;
 use App\Models\Artist;
-use App\Models\Category;
 use App\Models\Genre;
 use App\Models\User;
 use App\Facades\Spotify;
@@ -19,147 +19,134 @@ class Tracker
 {
     /**
      * @param int $releaseAge
-     * @param array $genreCategories
      * @param array $exceptions
      * @param array $artistIdExceptions
      * @param array $bannedGenreNames
+     * @param GenreCategorizerInterface $genreCategorizer
      */
     public function __construct(
-        private int $releaseAge,
-        private array $genreCategories,
-        private array $exceptions,
-        private array $artistIdExceptions,
-        private array $bannedGenreNames
+        private readonly int   $releaseAge,
+        private readonly array $exceptions,
+        private readonly array $artistIdExceptions,
+        private readonly array $bannedGenreNames,
+        private readonly GenreCategorizerInterface $genreCategorizer
     ) {}
 
     /**
      * @param User $user
      * @return void
      */
-    public function updateUserFollowedArtists(User $user)
+    public function updateUserFollowedArtists(User $user): void
     {
         $accessToken = $this->getUserAccessToken($user);
         $after = null;
         $actualArtistsIdList = [];
 
-        do {
+        while (true) {
             $result = Spotify::getFollowedArtists($accessToken, $after);
             $artists = $result->artists->items;
-            $after = $result->artists->cursors->after;
 
             foreach ($artists as $item) {
                 try {
-                    $artistId = $item->id;
-                    $actualArtistsIdList[] = $artistId;
-                    $artist = Artist::where('spotify_id', $artistId)->first();
-
-                    if (!isset($artist)) {
-                        $artist = new Artist();
-                        $artist->fill([
-                            'spotify_id' => $artistId,
-                            'name' => $item->name,
-                        ])->save();
-                    }
-
-                    if ($user->artists()->where('artist_id', $artist->id)->doesntExist()) {
-                        $user->artists()->attach($artist->id);
-                    }
+                    $artist = Artist::firstOrCreate(
+                        ['spotify_id' => $item->id],
+                        ['name' => $item->name]
+                    );
+                    $actualArtistsIdList[] = $artist->id;
                 } catch (Exception $e) {
                     Log::error($e->getMessage(), [
                         'method' => __METHOD__,
                         'user_id' => $user->id,
-                        'artist_spotify_id' => $artistId,
+                        'artist_spotify_id' => $item->id,
                     ]);
                 }
             }
-        } while ($after);
 
-        $userArtists = $user->artists;
-
-        foreach ($userArtists as $userArtist) {
-            try {
-                if (!in_array($userArtist->spotify_id, $actualArtistsIdList)) {
-                    $user->artists()->detach($userArtist->id);
-                }
-            } catch (Exception $e) {
-                Log::error($e->getMessage(), [
-                    'method' => __METHOD__,
-                    'user_id' => $user->id,
-                    'artist_id' => $userArtist->id,
-                ]);
+            if (empty($result->artists->cursors->after)) {
+                break;
+            } else {
+                $after = $result->artists->cursors->after;
             }
         }
+
+        $user->artists()->sync(array_unique($actualArtistsIdList));
     }
 
     /**
      * @param Artist $artist
      * @return void
      */
-    public function addLastArtistAlbum(Artist $artist)
+    public function addLastArtistAlbum(Artist $artist): void
+    {
+        $lastAlbum = $this->getLastAlbum($artist);
+        $lastSingle = $this->getLastSingle($artist);
+
+        $albumSaved = false;
+
+        if (!empty($lastAlbum) && $this->isAlbumOk($lastAlbum)) {
+            $this->saveAlbum($artist, $lastAlbum);
+            $albumSaved = true;
+        }
+
+        if (!empty($lastSingle) && $this->isAlbumOk($lastSingle)) {
+            $this->saveAlbum($artist, $lastSingle);
+            $albumSaved = true;
+        }
+
+        if ($albumSaved) {
+            $fullArtist = $this->getFullArtist($artist->spotify_id);
+            if (!empty($fullArtist)) {
+                $this->updateArtistGenres($artist, $fullArtist);
+            }
+        }
+
+        $artist->update(['checked_at' => date('Y-m-d H:i:s')]);
+    }
+
+    /**
+     * @param array $albumIds
+     * @return void
+     */
+    public function updateAlbums(array $albumIds): void
     {
         $accessToken = $this->getClientAccessToken();
 
-        $lastAlbum = $this->getLastAlbum($accessToken, $artist->spotify_id);
+        $albums = Album::whereIn('id', $albumIds)->get();
+        $albumSpotifyIds = $albums->pluck('spotify_id')->toArray();
+        $result = Spotify::getSeveralAlbums($accessToken, $albumSpotifyIds);
+        $fullAlbums = $result->albums;
 
-        $artist->checked_at = date('Y-m-d H:i:s');
-        $artist->save();
-
-        if ($this->isReleaseDateOk($lastAlbum) && $this->isAlbumNameOk($lastAlbum->name)) {
-            if (Album::where('spotify_id', $lastAlbum->id)->doesntExist()) {
-                $fullAlbum = Spotify::getAlbum($accessToken, $lastAlbum->id);
-                $newAlbum = new Album();
-                $newAlbum->fill([
-                    'spotify_id' => $lastAlbum->id,
-                    'name' => $fullAlbum->name,
-                    'release_date' => $fullAlbum->release_date,
-                    'artist_id' => $artist->id,
-                    'markets' => json_encode($fullAlbum->available_markets, JSON_UNESCAPED_UNICODE),
-                    'image' => $fullAlbum->images[1]->url,
-                    'popularity' => $fullAlbum->popularity,
-                ])->save();
-
-                $fullArtist = Spotify::getArtist($accessToken, $artist->spotify_id);
-                $this->updateConnections($artist, $fullArtist->genres);
+        foreach ($fullAlbums as $fullAlbum) {
+            try {
+                $album = $albums->where('spotify_id', $fullAlbum->id)->first();
+                $popularity = $fullAlbum->popularity;
+                $markets = json_encode($fullAlbum->available_markets, JSON_UNESCAPED_UNICODE);
+                $image = $fullAlbum->images[1]->url;
+                if ($popularity != $album->popularity) {
+                    $album->popularity = $popularity;
+                }
+                if ($markets != $album->markets) {
+                    $album->markets = $markets;
+                }
+                if ($album->image != $image) {
+                    $album->image = $image;
+                }
+                if ($album->isDirty()) {
+                    $album->save();
+                }
+            } catch (Exception $e) {
+                Log::error($e->getMessage(), [
+                    'method' => __METHOD__,
+                    'album_id' => $fullAlbum->id ?? null,
+                ]);
             }
         }
     }
 
     /**
-     * @param Album $album
      * @return void
      */
-    public function updateAlbum(Album $album)
-    {
-        $accessToken = $this->getClientAccessToken();
-        $releaseDateThreshold = $this->getReleaseDateThreshold();
-
-        if ($album->release_date < $releaseDateThreshold) {
-            $album->delete();
-        } else {
-            $albumSpotifyId = $album->spotify_id;
-            $fullAlbum = Spotify::getAlbum($accessToken, $albumSpotifyId);
-            $popularity = $fullAlbum->popularity;
-            $markets = json_encode($fullAlbum->available_markets, JSON_UNESCAPED_UNICODE);
-            $image = $fullAlbum->images[1]->url;
-            if ($popularity != $album->popularity) {
-                $album->popularity = $popularity;
-            }
-            if ($markets != $album->markets) {
-                $album->markets = $markets;
-            }
-            if ($album->image != $image) {
-                $album->image = $image;
-            }
-            if ($album->isDirty()) {
-                $album->save();
-            }
-        }
-    }
-
-    /**
-     * @return void
-     */
-    public function clearArtists()
+    public function clearArtists(): void
     {
         Artist::doesntHave('followings')->doesntHave('albums')->delete();
     }
@@ -169,66 +156,36 @@ class Tracker
      * @param string $market
      * @return void
      */
-    public function addNewReleases(string $searchTag, string $market)
+    public function addNewReleases(string $searchTag, string $market): void
     {
         $accessToken = $this->getClientAccessToken();
         $offset = null;
 
-        do {
+        while ($offset <= 950) {
             $result = Spotify::getNewReleases($accessToken, $searchTag, $market, $offset);
             $offset = $offset + 50;
             $albums = $result->albums->items;
 
             foreach ($albums as $album) {
                 try {
-                    if ($album->album_type !== 'album') {
-                        continue;
-                    }
-
-                    if (!$this->isReleaseDateOk($album) || !$this->isAlbumNameOk($album->name)) {
+                    if (!$this->isAlbumOk($album)) {
                         continue;
                     }
 
                     $artistSpotifyId = $album->artists[0]->id;
-
-                    if (in_array($artistSpotifyId, $this->artistIdExceptions)) {
+                    $fullArtist = $this->getFullArtist($artistSpotifyId);
+                    if (empty($fullArtist)) {
                         continue;
                     }
 
-                    if (Album::where('spotify_id', $album->id)->exists()) {
-                        continue;
-                    }
+                    $artist = Artist::firstOrCreate(
+                        ['spotify_id' => $fullArtist->id],
+                        ['name' => $fullArtist->name]
+                    );
 
-                    $fullArtist = Spotify::getArtist($accessToken, $artistSpotifyId);
-                    if (empty($fullArtist->genres) || !$this->areGenresOk($fullArtist->genres)) {
-                        continue;
-                    }
+                    $this->updateArtistGenres($artist, $fullArtist);
 
-                    $artist = Artist::where('spotify_id', $fullArtist->id)->first();
-
-                    if (!isset($artist)) {
-                        $artist = new Artist();
-                        $artist->fill([
-                            'spotify_id' => $fullArtist->id,
-                            'name' => $fullArtist->name,
-                        ])->save();
-                    }
-
-                    $this->updateConnections($artist, $fullArtist->genres);
-
-                    $albumSpotifyId = $album->id;
-                    $fullAlbum = Spotify::getAlbum($accessToken, $albumSpotifyId);
-
-                    $newAlbum = new Album();
-                    $newAlbum->fill([
-                        'spotify_id' => $albumSpotifyId,
-                        'name' => $fullAlbum->name,
-                        'release_date' => $fullAlbum->release_date,
-                        'artist_id' => $artist->id,
-                        'markets' => json_encode($fullAlbum->available_markets, JSON_UNESCAPED_UNICODE),
-                        'image' => $fullAlbum->images[1]->url,
-                        'popularity' => $fullAlbum->popularity,
-                    ])->save();
+                    $this->saveAlbum($artist, $album);
                 } catch (Exception $e) {
                     Log::error($e->getMessage(), [
                         'method' => __METHOD__,
@@ -236,7 +193,7 @@ class Tracker
                     ]);
                 }
             }
-        } while ($offset <= 950);
+        }
     }
 
     /**
@@ -248,26 +205,110 @@ class Tracker
 
         try {
             $markets = Spotify::getMarkets($accessToken)->markets;
-        } catch (Exception $e) {}
+        } catch (Exception $e) {
+            Log::error($e->getMessage(), [
+                'method' => __METHOD__
+            ]);
+        }
 
         return $markets ?? [];
     }
 
     /**
-     * @param string $accessToken
-     * @param string $spotifyId
-     * @return stdClass
+     * @param Artist $artist
+     * @return stdClass|null
      */
-    private function getLastAlbum(string $accessToken,string $spotifyId): stdClass
+    private function getLastAlbum(Artist $artist): ?stdClass
     {
-        $result = Spotify::getLastArtistAlbum($accessToken, $spotifyId);
+        $accessToken = $this->getClientAccessToken();
+
+        $result = Spotify::getLastArtistAlbum($accessToken, $artist->spotify_id);
         $counter = 0;
         while ($result === null && $counter < 2) {
             sleep(1);
-            $result = Spotify::getLastArtistAlbum($accessToken, $spotifyId);
+            $result = Spotify::getLastArtistAlbum($accessToken, $artist->spotify_id);
             $counter++;
         }
-        return $result->items[0];
+        return $result->items[0] ?? null;
+    }
+
+    /**
+     * @param Artist $artist
+     * @return stdClass|null
+     */
+    private function getLastSingle(Artist $artist): ?stdClass
+    {
+        $accessToken = $this->getClientAccessToken();
+
+        $result = Spotify::getLastArtistSingle($accessToken, $artist->spotify_id);
+        $counter = 0;
+        while ($result === null && $counter < 2) {
+            sleep(1);
+            $result = Spotify::getLastArtistSingle($accessToken, $artist->spotify_id);
+            $counter++;
+        }
+        return $result->items[0] ?? null;
+    }
+
+    /**
+     * @param Artist $artist
+     * @param stdClass $album
+     * @return void
+     */
+    private function saveAlbum(Artist $artist, stdClass $album): void
+    {
+        $accessToken = $this->getClientAccessToken();
+
+        $fullAlbum = Spotify::getAlbum($accessToken, $album->id);
+        Album::create([
+            'spotify_id' => $album->id,
+            'name' => $fullAlbum->name,
+            'release_date' => $fullAlbum->release_date,
+            'artist_id' => $artist->id,
+            'markets' => json_encode($fullAlbum->available_markets, JSON_UNESCAPED_UNICODE),
+            'image' => $fullAlbum->images[1]->url,
+            'popularity' => $fullAlbum->popularity,
+            'type' => $album->album_type,
+        ]);
+    }
+
+    /**
+     * @param Artist $artist
+     * @param stdClass $fullArtist
+     * @return void
+     */
+    private function updateArtistGenres(Artist $artist, stdClass $fullArtist): void
+    {
+        $actualGenresIdList = [];
+        foreach ($fullArtist->genres as $genreName) {
+            if (in_array($genreName, $this->bannedGenreNames)) {
+                continue;
+            }
+
+            $genre = Genre::firstOrCreate(['name' => $genreName]);
+            $actualGenresIdList[] = $genre->id;
+
+            if ($genre->categories()->doesntExist()) {
+                $this->genreCategorizer->categorize($genre);
+            }
+        }
+
+        $artist->genres()->sync(array_unique($actualGenresIdList));
+    }
+
+    /**
+     * @param string $artistSpotifyId
+     * @return stdClass|null
+     */
+    private function getFullArtist(string $artistSpotifyId): ?stdClass
+    {
+        $accessToken = $this->getClientAccessToken();
+
+        $fullArtist = Spotify::getArtist($accessToken, $artistSpotifyId);
+        if (empty($fullArtist->genres) || !$this->areGenresOk($fullArtist->genres)) {
+            return null;
+        }
+        return $fullArtist;
     }
 
     /**
@@ -281,55 +322,11 @@ class Tracker
     }
 
     /**
-     * @param Artist $artist
-     * @param array $genreNames
-     */
-    private function updateConnections(Artist $artist, array $genreNames)
-    {
-        $artistGenres = $artist->genres;
-        foreach ($artistGenres as $artistGenre) {
-            if (!in_array($artistGenre->name, $genreNames)) {
-                $artist->genres()->detach($artistGenre->id);
-            }
-        }
-
-        foreach ($genreNames as $genreName) {
-            if (in_array($genreName, $this->bannedGenreNames)) {
-                continue;
-            }
-            $genre = Genre::firstOrCreate(
-                ['name' => $genreName],
-                ['category_id' => Category::where('name', $this->getGenreCategory($genreName))->first()->id],
-            );
-
-            if ($artist->genres()->where('name', $genreName)->doesntExist()) {
-                $artist->genres()->attach($genre->id);
-            }
-        }
-    }
-
-    /**
      * @return string
      */
     private function getReleaseDateThreshold(): string
     {
         return date('Y-m-d', time() - $this->releaseAge * 24 * 60 * 60);
-    }
-
-    /**
-     * @param string $genre
-     * @return string
-     */
-    public function getGenreCategory(string $genre): string
-    {
-        foreach ($this->genreCategories as $genreCategory => $keyWords) {
-            foreach ($keyWords as $keyWord) {
-                if (str_contains(strtolower($genre), $keyWord)) {
-                    return $genreCategory;
-                }
-            }
-        }
-        return 'Other';
     }
 
     /**
@@ -380,5 +377,25 @@ class Tracker
             }
         }
         return false;
+    }
+
+    /**
+     * @param stdClass $album
+     * @return bool
+     */
+    private function isAlbumOk(stdClass $album): bool
+    {
+        $artistSpotifyId = $album->artists[0]->id;
+
+        if (!in_array($album->album_type, ['album', 'single'])
+            || !$this->isReleaseDateOk($album)
+            || !$this->isAlbumNameOk($album->name)
+            || in_array($artistSpotifyId, $this->artistIdExceptions)
+            || Album::where('spotify_id', $album->id)->exists()
+        ) {
+            return false;
+        }
+
+        return true;
     }
 }

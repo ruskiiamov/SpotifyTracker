@@ -128,7 +128,19 @@ class Spotify
     public function getLastArtistAlbum($accessToken, $artistId)
     {
         $parameters = [
-            'include_groups' => 'album,single',
+            'include_groups' => 'album',
+            'limit' => 1,
+        ];
+
+        $headers = ['Authorization' => 'Bearer ' . $accessToken];
+
+        return $this->request('GET', $this->apiUrl . "/artists/{$artistId}/albums?", $parameters, $headers);
+    }
+
+    public function getLastArtistSingle($accessToken, $artistId)
+    {
+        $parameters = [
+            'include_groups' => 'single',
             'limit' => 1,
         ];
 
@@ -192,6 +204,39 @@ class Spotify
     {
         $availableSince = Cache::get('spotify-requests-available-since', 0);
         return time() > $availableSince;
+    }
+
+    public function getNewReleases2($accessToken)
+    {
+        $parameters = [
+            'country' => 'GB',
+            'limit' => '50',
+            'offset' => '99',
+        ];
+
+        $headers = ['Authorization' => 'Bearer ' . $accessToken];
+
+        return $this->request('GET', $this->apiUrl . '/browse/new-releases', $parameters, $headers);
+    }
+
+    public function getAvailableGenreSeeds($accessToken)
+    {
+        $headers = ['Authorization' => 'Bearer ' . $accessToken];
+
+        return $this->request('GET', $this->apiUrl . '/recommendations/available-genre-seeds', [], $headers);
+    }
+
+    public function getSeveralAlbums($accessToken, array $albumIds)
+    {
+        $ids = implode(',', $albumIds);
+
+        $parameters = [
+            'ids' => $ids
+        ];
+
+        $headers = ['Authorization' => 'Bearer ' . $accessToken];
+
+        return $this->request('GET', $this->apiUrl . '/albums', $parameters, $headers);
     }
 
     private function createState()

@@ -9,6 +9,7 @@ use App\Models\Genre;
 use App\Models\Subscription;
 use App\Services\IpInfo;
 use App\Services\Tracker;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -51,19 +52,19 @@ class HomeController extends Controller
             $country = $user->country;
             $categoryIds = $user->categories->pluck('id')->all();
             $categories = $user->categories;
-            $followedArtistIds = $user->artists()->has('albums')->get()->pluck('id')->all();
         } else {
             $country = $this->processCountryCode($tracker, $location->getCountryCode($request));
             $categoryIds = session('subscriptions') ?? [];
             $categories = Category::whereIn('id', $categoryIds)->get();
-            $followedArtistIds = [];
         }
 
-        $genreIds = Genre::whereIn('category_id', $categoryIds)->get()->pluck('id')->all();
-        $artistIds = Connection::whereIn('genre_id', $genreIds)->get()->unique('artist_id')->pluck('artist_id')->all();
-        $filteredArtistIds = array_diff($artistIds, $followedArtistIds);
+        $genreIds = Genre::whereHas('categories', function (Builder $query) use ($categoryIds) {
+            $query->whereIn('id', $categoryIds);
+        })->get()->unique('id')->pluck('id')->all();
 
-        $albums = Album::whereIn('artist_id', $filteredArtistIds)
+        $artistIds = Connection::whereIn('genre_id', $genreIds)->get()->unique('artist_id')->pluck('artist_id')->all();
+
+        $albums = Album::whereIn('artist_id', $artistIds)
             ->whereJsonContains('markets', $country)
             ->orderBy('release_date', 'desc')
             ->orderBy('popularity', 'desc')

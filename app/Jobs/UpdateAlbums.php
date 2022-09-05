@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Facades\Spotify;
-use App\Models\Album;
 use App\Services\Tracker;
 use Exception;
 use Illuminate\Bus\Queueable;
@@ -16,7 +15,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
-class UpdateAlbum implements ShouldQueue
+class UpdateAlbums implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -30,10 +29,10 @@ class UpdateAlbum implements ShouldQueue
     /**
      * Create a new job instance.
      *
-     * @param Album $album
+     * @param array $albumIds
      */
     public function __construct (
-        private Album $album,
+        private readonly array $albumIds,
     ) {}
 
     /**
@@ -56,9 +55,9 @@ class UpdateAlbum implements ShouldQueue
     {
         if (Spotify::areRequestsAvailable()) {
             try {
-                $tracker->updateAlbum($this->album);
+                $tracker->updateAlbums($this->albumIds);
             } catch (Exception $e) {
-                Log::error($e->getMessage(), ['method' => __METHOD__, 'album_id' => $this->album->id]);
+                Log::error($e->getMessage(), ['method' => __METHOD__]);
             }
         }
     }

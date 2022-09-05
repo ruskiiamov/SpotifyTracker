@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Console\Commands;
 
 use App\Models\Artist;
@@ -10,6 +12,9 @@ use Illuminate\Database\Eloquent\Builder;
 
 class ScanArtistsWithMissedGenres extends Command
 {
+    /** @var string */
+    private readonly string $other;
+
     /**
      * The name and signature of the console command.
      *
@@ -31,6 +36,7 @@ class ScanArtistsWithMissedGenres extends Command
      */
     public function __construct()
     {
+        $this->other = config('genres.other');
         parent::__construct();
     }
 
@@ -39,24 +45,21 @@ class ScanArtistsWithMissedGenres extends Command
      */
     public function handle()
     {
-        $regularCategoryIds = Category::where('name', '<>', 'Other')->get()->pluck('id')->toArray();
+        $regularCategoryIds = Category::where('name', '<>', $this->other)->get()->pluck('id')->toArray();
 
         $artists = Artist::has('genres')
             ->whereDoesntHave('genres', function (Builder $query) use ($regularCategoryIds) {
-                $query->whereIn('category_id', $regularCategoryIds);
+                $query->whereHas('categories', function (Builder $query) use ($regularCategoryIds) {
+                    $query->whereIn('id', $regularCategoryIds);
+                });
             })->get();
 
         foreach ($artists as $artist) {
-            if (MissedGenresArtist::where('artist_name', $artist->name)->doesntExist()) {
-                $genres = [];
-                foreach ($artist->genres as $genre) {
-                    $genres[] = $genre->name;
-                }
-                MissedGenresArtist::create([
-                    'artist_name' => $artist->name,
-                    'genre_names' => $genres,
-                ]);
-            }
+            $genres = $artist->genres->pluck('name')->toArray();
+            MissedGenresArtist::firstOrCreate(
+                ['artist_name' => $artist->name],
+                ['genre_names' => $genres]
+            );
         }
     }
 }

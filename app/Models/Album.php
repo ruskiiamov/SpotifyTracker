@@ -17,6 +17,7 @@ class Album extends Model
         'markets',
         'image',
         'popularity',
+        'type'
     ];
 
     public function artist()

@@ -11,12 +11,11 @@ class Genre extends Model
 
     protected $fillable = [
         'name',
-        'category_id',
     ];
 
-    public function category()
+    public function categories()
     {
-        return $this->belongsTo(Category::class);
+        return $this->belongsToMany(Category::class, 'genre_category');
     }
 
     public function artists()
