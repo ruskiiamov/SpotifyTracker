@@ -52,14 +52,14 @@ class AddNewReleases extends Command
     public function handle()
     {
         if (Spotify::areRequestsAvailable()) {
-//            foreach ($this->markets as $market) {
-                try {$market = 'DE';
+            foreach ($this->markets as $market) {
+                try {
                     AddNewReleasesJob::dispatch('new', $market);//TODO change to enum
                     AddNewReleasesJob::dispatch('hipster', $market);
                 } catch (Exception $e) {
                     Log::error($e->getMessage(), ['method' => __METHOD__]);
                 }
-//            }
+            }
         }
     }
 }
