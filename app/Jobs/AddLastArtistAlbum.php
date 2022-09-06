@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Facades\Spotify;
-use App\Models\Artist;
 use App\Services\Tracker;
 use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
@@ -30,10 +30,10 @@ class AddLastArtistAlbum implements ShouldQueue
     /**
      * Create a new job instance.
      *
-     * @param Artist $artist
+     * @param Collection $artists
      */
     public function __construct (
-        private Artist $artist,
+        private readonly Collection $artists,
     ) {}
 
     /**
@@ -56,9 +56,9 @@ class AddLastArtistAlbum implements ShouldQueue
     {
         if (Spotify::areRequestsAvailable()) {
             try {
-                $tracker->addLastArtistAlbum($this->artist);
+                $tracker->addLastArtistAlbum($this->artists);
             } catch (Exception $e) {
-                Log::error($e->getMessage(), ['method' => __METHOD__, 'artist_id' => $this->artist->id,]);
+                Log::error($e->getMessage(), ['method' => __METHOD__]);
             }
         }
     }

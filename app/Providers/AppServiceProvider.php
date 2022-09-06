@@ -18,6 +18,8 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(Tracker::class, function () {
             return new Tracker(
+                getSeveralAlbumsLimit: config('spotifyConfig.getSeveralAlbumsLimit'),
+                getSeveralArtistsLimit: config('spotifyConfig.getSeveralArtistsLimit'),
                 releaseAge: config('spotifyConfig.releaseAge'),
                 exceptions: config('spotifyConfig.exceptions'),
                 artistIdExceptions: config('spotifyConfig.artistIdExceptions'),

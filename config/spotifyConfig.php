@@ -5,6 +5,7 @@ return [
     'requestRateLimitDecay' => 10, //seconds
 
     'getSeveralAlbumsLimit' => 20,
+    'getSeveralArtistsLimit' => 50,
 
     'releaseAge' => 14, //days
     'checkAge' => 6, //hours

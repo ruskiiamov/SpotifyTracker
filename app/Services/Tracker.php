@@ -11,6 +11,7 @@ use App\Models\Genre;
 use App\Models\User;
 use App\Facades\Spotify;
 use Exception;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use stdClass;
@@ -18,6 +19,8 @@ use stdClass;
 class Tracker
 {
     /**
+     * @param int $getSeveralAlbumsLimit
+     * @param int $getSeveralArtistsLimit
      * @param int $releaseAge
      * @param array $exceptions
      * @param array $artistIdExceptions
@@ -25,6 +28,8 @@ class Tracker
      * @param GenreCategorizerInterface $genreCategorizer
      */
     public function __construct(
+        private readonly int   $getSeveralAlbumsLimit,
+        private readonly int   $getSeveralArtistsLimit,
         private readonly int   $releaseAge,
         private readonly array $exceptions,
         private readonly array $artistIdExceptions,
@@ -73,34 +78,59 @@ class Tracker
     }
 
     /**
-     * @param Artist $artist
+     * @param Collection $artists
      * @return void
+     * @throws Exception
      */
-    public function addLastArtistAlbum(Artist $artist): void
+    public function addLastArtistAlbum(Collection $artists): void
     {
-        $lastAlbum = $this->getLastAlbum($artist);
-        $lastSingle = $this->getLastSingle($artist);
+        $albumSpotifyIds = [];
+        $artistSpotifyIds = [];
 
-        $albumSaved = false;
+        foreach ($artists as $artist) {
+            $artistShouldBeUpdated = false;
 
-        if (!empty($lastAlbum) && $this->isAlbumOk($lastAlbum)) {
-            $this->saveAlbum($artist, $lastAlbum);
-            $albumSaved = true;
-        }
-
-        if (!empty($lastSingle) && $this->isAlbumOk($lastSingle)) {
-            $this->saveAlbum($artist, $lastSingle);
-            $albumSaved = true;
-        }
-
-        if ($albumSaved) {
-            $fullArtist = $this->getFullArtist($artist->spotify_id);
-            if (!empty($fullArtist)) {
-                $this->updateArtistGenres($artist, $fullArtist);
+            $lastAlbum = $this->getLastAlbum($artist);
+            if (!empty($lastAlbum) && $this->isAlbumOk($lastAlbum)) {
+                $albumSpotifyIds[] = $lastAlbum->id;
+                $artistShouldBeUpdated = true;
             }
+
+            if (count($albumSpotifyIds) == $this->getSeveralAlbumsLimit) {
+                $this->saveAlbums($albumSpotifyIds);
+                $albumSpotifyIds = [];
+            }
+
+            $lastSingle = $this->getLastSingle($artist);
+            if (!empty($lastSingle) && $this->isAlbumOk($lastSingle)) {
+                $albumSpotifyIds[] = $lastSingle->id;
+                $artistShouldBeUpdated = true;
+            }
+
+            if (count($albumSpotifyIds) == $this->getSeveralAlbumsLimit) {
+                $this->saveAlbums($albumSpotifyIds);
+                $albumSpotifyIds = [];
+            }
+
+            if ($artistShouldBeUpdated) {
+                $artistSpotifyIds[] = $artist->spotify_id;
+            }
+
+            if (count($artistSpotifyIds) == $this->getSeveralArtistsLimit) {
+                $this->updateArtists($artistSpotifyIds);
+                $artistSpotifyIds = [];
+            }
+
+            $artist->update(['checked_at' => date('Y-m-d H:i:s')]);
         }
 
-        $artist->update(['checked_at' => date('Y-m-d H:i:s')]);
+        if (!empty($albumSpotifyIds)) {
+            $this->saveAlbums($albumSpotifyIds);
+        }
+
+        if (!empty($artistSpotifyIds)) {
+            $this->updateArtists($artistSpotifyIds);
+        }
     }
 
     /**
@@ -155,11 +185,15 @@ class Tracker
      * @param string $searchTag
      * @param string $market
      * @return void
+     * @throws Exception
      */
     public function addNewReleases(string $searchTag, string $market): void
     {
         $accessToken = $this->getClientAccessToken();
         $offset = null;
+
+        $albumSpotifyIds = [];
+        $artistSpotifyIds = [];
 
         while ($offset <= 950) {
             $result = Spotify::getNewReleases($accessToken, $searchTag, $market, $offset);
@@ -168,24 +202,21 @@ class Tracker
 
             foreach ($albums as $album) {
                 try {
-                    if (!$this->isAlbumOk($album)) {
-                        continue;
+                    if ($this->isAlbumOk($album)) {
+                        $this->saveArtist($album->artists[0]);
+                        $albumSpotifyIds[] = $album->id;
+                        $artistSpotifyIds[] = $album->artists[0]->id;
                     }
 
-                    $artistSpotifyId = $album->artists[0]->id;
-                    $fullArtist = $this->getFullArtist($artistSpotifyId);
-                    if (empty($fullArtist)) {
-                        continue;
+                    if (count($albumSpotifyIds) == $this->getSeveralAlbumsLimit) {
+                        $this->saveAlbums($albumSpotifyIds);
+                        $albumSpotifyIds = [];
                     }
 
-                    $artist = Artist::firstOrCreate(
-                        ['spotify_id' => $fullArtist->id],
-                        ['name' => $fullArtist->name]
-                    );
-
-                    $this->updateArtistGenres($artist, $fullArtist);
-
-                    $this->saveAlbum($artist, $album);
+                    if (count($artistSpotifyIds) == $this->getSeveralArtistsLimit) {
+                        $this->updateArtists($artistSpotifyIds);
+                        $artistSpotifyIds = [];
+                    }
                 } catch (Exception $e) {
                     Log::error($e->getMessage(), [
                         'method' => __METHOD__,
@@ -193,6 +224,14 @@ class Tracker
                     ]);
                 }
             }
+        }
+
+        if (!empty($albumSpotifyIds)) {
+            $this->saveAlbums($albumSpotifyIds);
+        }
+
+        if (!empty($artistSpotifyIds)) {
+            $this->updateArtists($artistSpotifyIds);
         }
     }
 
@@ -251,33 +290,102 @@ class Tracker
     }
 
     /**
-     * @param Artist $artist
-     * @param stdClass $album
+     * @param array $albumSpotifyIds
      * @return void
+     * @throws Exception
      */
-    private function saveAlbum(Artist $artist, stdClass $album): void
+    private function saveAlbums(array $albumSpotifyIds): void
     {
+        $albumSpotifyIds = array_unique($albumSpotifyIds);
+
+        if (count($albumSpotifyIds) > $this->getSeveralAlbumsLimit) {
+            throw new Exception('Too many album ids');
+        }
+
         $accessToken = $this->getClientAccessToken();
 
-        $fullAlbum = Spotify::getAlbum($accessToken, $album->id);
+        $result = Spotify::getSeveralAlbums($accessToken, $albumSpotifyIds);
+        $fullAlbums = $result->albums;
+
+        foreach ($fullAlbums as $fullAlbum) {
+            try {
+                $this->saveAlbum($fullAlbum);
+            } catch (Exception $e) {
+                Log::error($e->getMessage(), [
+                    'method' => __METHOD__,
+                    'spotify_id' => $fullAlbum?->id,
+                    'name' => $fullAlbum?->name,
+                ]);
+            }
+        }
+    }
+
+    /**
+     * @param stdClass $fullAlbum
+     * @return void
+     */
+    private function saveAlbum(stdClass $fullAlbum): void
+    {
         Album::create([
-            'spotify_id' => $album->id,
+            'spotify_id' => $fullAlbum->id,
             'name' => $fullAlbum->name,
             'release_date' => $fullAlbum->release_date,
-            'artist_id' => $artist->id,
+            'artist_id' => Artist::where('spotify_id', $fullAlbum->artists[0]->id)->first()->id,
             'markets' => json_encode($fullAlbum->available_markets, JSON_UNESCAPED_UNICODE),
             'image' => $fullAlbum->images[1]->url,
             'popularity' => $fullAlbum->popularity,
-            'type' => $album->album_type,
+            'type' => $fullAlbum->album_type,
         ]);
     }
 
     /**
-     * @param Artist $artist
+     * @param stdClass $artist
+     * @return void
+     */
+    private function saveArtist(stdClass $artist): void
+    {
+        Artist::firstOrCreate(
+            ['spotify_id' => $artist->id],
+            ['name' => $artist->name],
+        );
+    }
+
+    /**
+     * @param array $artistSpotifyIds
+     * @return void
+     * @throws Exception
+     */
+    private function updateArtists(array $artistSpotifyIds): void
+    {
+        $artistSpotifyIds = array_unique($artistSpotifyIds);
+
+        if (count($artistSpotifyIds) > $this->getSeveralArtistsLimit) {
+            throw new Exception('Too many artist ids');
+        }
+
+        $accessToken = $this->getClientAccessToken();
+
+        $result = Spotify::getSeveralArtists($accessToken, $artistSpotifyIds);
+        $fullArtists = $result->artists;
+
+        foreach ($fullArtists as $fullArtist) {
+            try {
+                $this->updateArtistGenres($fullArtist);
+            } catch (Exception $e) {
+                Log::error($e->getMessage(), [
+                    'method' => __METHOD__,
+                    'spotify_id' => $fullArtist?->id,
+                    'name' => $fullArtist?->name,
+                ]);
+            }
+        }
+    }
+
+    /**
      * @param stdClass $fullArtist
      * @return void
      */
-    private function updateArtistGenres(Artist $artist, stdClass $fullArtist): void
+    private function updateArtistGenres(stdClass $fullArtist): void
     {
         $actualGenresIdList = [];
         foreach ($fullArtist->genres as $genreName) {
@@ -293,6 +401,7 @@ class Tracker
             }
         }
 
+        $artist = Artist::where('spotify_id', $fullArtist->id)->first();
         $artist->genres()->sync(array_unique($actualGenresIdList));
     }
 

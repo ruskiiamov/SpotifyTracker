@@ -62,7 +62,7 @@ class AddNewReleases implements ShouldQueue
                 Log::error($e->getMessage(), [
                     'method' => __METHOD__,
                     'search_tag' => $this->searchTag,
-                    'marker' => $this->market,
+                    'market' => $this->market,
                 ]);
             }
         }

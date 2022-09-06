@@ -239,6 +239,19 @@ class Spotify
         return $this->request('GET', $this->apiUrl . '/albums', $parameters, $headers);
     }
 
+    public function getSeveralArtists($accessToken, array $artistIds)
+    {
+        $ids = implode(',', $artistIds);
+
+        $parameters = [
+            'ids' => $ids
+        ];
+
+        $headers = ['Authorization' => 'Bearer ' . $accessToken];
+
+        return $this->request('GET', $this->apiUrl . '/artists', $parameters, $headers);
+    }
+
     private function createState()
     {
         $state = uniqid(rand(), true);

@@ -59,12 +59,10 @@ class AddFollowedAlbums extends Command
             Artist::has('followings')
                 ->where('checked_at', '<', $checkThreshold)
                 ->chunkById(200, function ($artists) {
-                    foreach ($artists as $artist) {
-                        try {
-                            AddLastArtistAlbum::dispatch($artist);
-                        } catch (Exception $e) {
-                            Log::error($e->getMessage(), ['method' => __METHOD__, 'artist_id' => $artist->id,]);
-                        }
+                    try {
+                        AddLastArtistAlbum::dispatch($artists);
+                    } catch (Exception $e) {
+                        Log::error($e->getMessage(), ['method' => __METHOD__]);
                     }
                 });
         }
