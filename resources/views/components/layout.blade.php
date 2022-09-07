@@ -14,9 +14,11 @@
 <header class="bg-green text-white mb-6">
     <div class="container mx-auto px-4 flex justify-between items-center flex-wrap">
         <div class="flex items-center py-3">
-            <a href="{{ route('index') }}" class="font-bold text-4xl ">ReleaseHunter</a>
+            <a href="{{ route('index') }}" class="text-3xl ">Release</a>
+            <a href="{{ route('index') }}" class="font-bold text-3xl ">Hunter</a>
         </div>
-        <div class="flex items-center py-2">{{ $header }}</div>
+        <div class="flex items-center py-2">{{ $info }}</div>
+        <div class="flex items-center py-2">{{ $auth }}</div>
     </div>
 </header>
 <main>

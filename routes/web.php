@@ -39,8 +39,8 @@ Route::get('/followed', [HomeController::class, 'followed'])
     ->middleware('auth')
     ->name('followed');
 
-Route::get('/subscribed', [HomeController::class, 'subscribed'])
-    ->name('subscribed');
+Route::get('/releases', [HomeController::class, 'releases'])
+    ->name('releases');
 
 Route::get('/genres', [HomeController::class, 'genres'])
     ->name('genres');

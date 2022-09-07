@@ -20,15 +20,20 @@ class HomeController extends Controller
         return view('home');
     }
 
-    public function followed()
+    public function followed(Request $request)
     {
         $user = Auth::user();
         $country = $user->country;
 
         $artistIds = $user->artists()->has('albums')->get()->pluck('id')->all();
 
+        $only_albums = $this->getOnlyAlbumsFlag($request);
+
         $albums = Album::whereIn('artist_id', $artistIds)
             ->whereJsonContains('markets', $country)
+            ->when($only_albums, function ($query) {
+                $query->where('type', 'album');
+            })
             ->orderBy('release_date', 'desc')
             ->orderBy('popularity', 'desc')
             ->paginate(config('spotifyConfig.pagination'));
@@ -37,15 +42,18 @@ class HomeController extends Controller
             return $item['name'] . $item['artist_id'];
         })->groupby('release_date');
 
-        $title = 'followed artists';
+
         return view('albums', [
             'newReleases' => $newReleases,
             'albums' => $albums,
             'categories' => [],
-            'title' => $title]);
+            'only_albums' => $only_albums,
+            'current_route' => 'followed',
+            'title' => 'Followed Artists',
+        ]);
     }
 
-    public function subscribed(Request $request, IpInfo $location, Tracker $tracker)
+    public function releases(Request $request, IpInfo $location, Tracker $tracker)
     {
         $user = Auth::user();
         if (!empty($user)) {
@@ -64,8 +72,13 @@ class HomeController extends Controller
 
         $artistIds = Connection::whereIn('genre_id', $genreIds)->get()->unique('artist_id')->pluck('artist_id')->all();
 
+        $only_albums = $this->getOnlyAlbumsFlag($request);
+
         $albums = Album::whereIn('artist_id', $artistIds)
             ->whereJsonContains('markets', $country)
+            ->when($only_albums, function ($query) {
+                $query->where('type', 'album');
+            })
             ->orderBy('release_date', 'desc')
             ->orderBy('popularity', 'desc')
             ->paginate(config('spotifyConfig.pagination'));
@@ -74,13 +87,13 @@ class HomeController extends Controller
             return $item['name'] . $item['artist_id'];
         })->groupby('release_date');
 
-        $title = 'subscribed genres';
-
         return view('albums', [
             'newReleases' => $newReleases,
             'albums' => $albums,
             'categories' => $categories,
-            'title' => $title
+            'only_albums' => $only_albums,
+            'current_route' => 'releases',
+            'title' => 'Releases by Genre',
         ]);
     }
 
@@ -127,7 +140,7 @@ class HomeController extends Controller
             session(['subscriptions' => $subscriptions]);
         }
 
-        return redirect()->route('subscribed');
+        return redirect()->route('releases');
     }
 
     /**
@@ -142,5 +155,22 @@ class HomeController extends Controller
         }
 
         return $countryCode;
+    }
+
+    /**
+     * @param Request $request
+     * @return bool
+     */
+    private function getOnlyAlbumsFlag(Request $request): bool
+    {
+        if ($request->exists('only_albums')) {
+            if ($request->get('only_albums') == 1) {
+                session(['only_albums' => true]);
+            } else {
+                session(['only_albums' => false]);
+            }
+        }
+
+        return session('only_albums') ?? false;
     }
 }

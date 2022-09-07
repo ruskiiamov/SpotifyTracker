@@ -1,5 +1,8 @@
 <x-layout>
-    <x-slot name="header">
+    <x-slot name="info">
+    </x-slot>
+
+    <x-slot name="auth">
         @if(!empty(auth()->user()))
         <a href="{{ route('logout') }}" class="font-bold text-white text-xl">Logout</a>
         @endif
@@ -9,7 +12,7 @@
         <p class="text-center pb-8 font-bold text-xl">Please choose genres</p>
         <form method="post" action="{{ route('subscription') }}" >
             @csrf
-            <div class="grid grid-cols-2 gap-y-8 gap-x-16 pb-8">
+            <div class="grid xl:grid-cols-2 lg:grid-cols-2 md:grid-cols-2 sm:grid-cols-1 gap-y-8 gap-x-16 pb-8">
                 @foreach($allCategories as $category)
                     <div class="flex justify-center items-center">
                         <input type="hidden" name="{{ $category->id }}" value="0">

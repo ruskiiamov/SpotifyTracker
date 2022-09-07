@@ -1,5 +1,8 @@
 <x-layout>
-    <x-slot name="header">
+    <x-slot name="info">
+    </x-slot>
+
+    <x-slot name="auth">
     </x-slot>
 
     <div>

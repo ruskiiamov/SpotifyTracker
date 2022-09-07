@@ -1,5 +1,8 @@
 <x-layout>
-    <x-slot name="header">
+    <x-slot name="info">
+    </x-slot>
+
+    <x-slot name="auth">
         <a href="{{ route('logout') }}" class="font-bold text-white text-xl">Logout</a>
     </x-slot>
 
