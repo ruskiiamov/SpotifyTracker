@@ -2,9 +2,7 @@
 
 namespace App\Console;
 
-use App\Models\User;
 use Illuminate\Console\Scheduling\Schedule;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
 class Kernel extends ConsoleKernel
@@ -21,7 +19,7 @@ class Kernel extends ConsoleKernel
     /**
      * Define the application's command schedule.
      *
-     * @param  \Illuminate\Console\Scheduling\Schedule  $schedule
+     * @param Schedule $schedule
      * @return void
      */
     protected function schedule(Schedule $schedule)
@@ -29,10 +27,10 @@ class Kernel extends ConsoleKernel
         if (config('schedule.enabled')) {
             $schedule->command('app:queue-update-followed-artists')->everySixHours();
             $schedule->command('app:queue-add-followed-albums')->everySixHours();
-            $schedule->command('app:queue-update-albums')->twiceDaily(2, 14);
-            $schedule->command('app:queue-clear-artists')->daily();
             $schedule->command('app:queue-add-new-releases')->twiceDaily(1, 13);
-            $schedule->command('app:scan-artists-with-missed-genres')->daily();
+            $schedule->command('app:queue-clear-artists')->cron('30 1,13 * * *');
+            $schedule->command('app:queue-update-albums')->twiceDaily(2, 14);
+            $schedule->command('app:scan-artists-with-missed-genres')->dailyAt('15:00');
             $schedule->command('app:rate-limit-check')->everyThirtyMinutes();
         }
     }

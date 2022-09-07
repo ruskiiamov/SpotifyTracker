@@ -11,6 +11,7 @@ use App\Models\Genre;
 use App\Models\User;
 use App\Facades\Spotify;
 use Exception;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -53,6 +54,10 @@ class Tracker
 
             foreach ($artists as $item) {
                 try {
+                    if (in_array($item->id, $this->artistIdExceptions)) {
+                        continue;
+                    }
+
                     $artist = Artist::firstOrCreate(
                         ['spotify_id' => $item->id],
                         ['name' => $item->name]
@@ -149,9 +154,17 @@ class Tracker
         foreach ($fullAlbums as $fullAlbum) {
             try {
                 $album = $albums->where('spotify_id', $fullAlbum->id)->first();
+
+                $type = $fullAlbum->album_type;
+                if ($type == 'compilation') {
+                    $album->delete();
+                    continue;
+                }
+
                 $popularity = $fullAlbum->popularity;
                 $markets = json_encode($fullAlbum->available_markets, JSON_UNESCAPED_UNICODE);
                 $image = $fullAlbum->images[1]->url;
+
                 if ($popularity != $album->popularity) {
                     $album->popularity = $popularity;
                 }
@@ -179,6 +192,16 @@ class Tracker
     public function clearArtists(): void
     {
         Artist::doesntHave('followings')->doesntHave('albums')->delete();
+
+        Album::whereHas('artist', function (Builder $query) {
+            $query->whereIn('spotify_id', $this->artistIdExceptions);
+        })->delete();
+        Artist::whereIn('spotify_id', $this->artistIdExceptions)->delete();
+
+        Album::whereHas('artist', function (Builder $query) {
+            $query->doesntHave('followings')->doesntHave('genres');
+        })->delete();
+        Artist::doesntHave('followings')->doesntHave('genres')->delete();
     }
 
     /**
