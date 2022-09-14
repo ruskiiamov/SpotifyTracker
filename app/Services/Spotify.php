@@ -76,7 +76,18 @@ class Spotify
 
         $headers = ['Authorization' => 'Basic ' . $base64];
 
-        $result = $this->request('POST', $this->tokenUrl, $parameters, $headers);
+        for ($i = 0; $i < 3; $i++) {
+            try {
+                $result = $this->request('POST', $this->tokenUrl, $parameters, $headers);
+                break;
+            } catch (\Exception $e) {
+                sleep(3);
+            }
+        }
+
+        if (!isset($result)) {
+            throw new \Exception('Access token not received');
+        }
 
         $this->saveClientAccessToken($result->access_token, $result->expires_in);
 

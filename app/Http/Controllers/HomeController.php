@@ -2,16 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Album;
 use App\Models\Category;
-use App\Models\Connection;
-use App\Models\Genre;
 use App\Models\Subscription;
 use App\Services\IpInfo;
+use App\Services\Releases;
 use App\Services\Tracker;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class HomeController extends Controller
 {
@@ -20,78 +18,69 @@ class HomeController extends Controller
         return view('home');
     }
 
-    public function followed(Request $request)
+    public function followed(Request $request, Releases $releases)
     {
         $user = Auth::user();
-        $country = $user->country;
+        $onlyAlbums = $this->getOnlyAlbumsFlag($request);
+        $page = $this->getPaginationPage($request);
 
-        $artistIds = $user->artists()->has('albums')->get()->pluck('id')->all();
-
-        $only_albums = $this->getOnlyAlbumsFlag($request);
-
-        $albums = Album::whereIn('artist_id', $artistIds)
-            ->whereJsonContains('markets', $country)
-            ->when($only_albums, function ($query) {
-                $query->where('type', 'album');
-            })
-            ->orderBy('release_date', 'desc')
-            ->orderBy('popularity', 'desc')
-            ->paginate(config('spotifyConfig.pagination'));
+        $albums = $releases->getFollowedAlbumsPaginator(
+            user: $user,
+            onlyAlbums: $onlyAlbums,
+            page: $page
+        );
 
         $newReleases = $albums->unique(function ($item) {
-            return $item['name'] . $item['artist_id'];
+            return $item->name . $item->artist->id;
         })->groupby('release_date');
-
 
         return view('albums', [
             'newReleases' => $newReleases,
             'albums' => $albums,
             'categories' => [],
-            'only_albums' => $only_albums,
+            'onlyAlbums' => $onlyAlbums,
             'current_route' => 'followed',
             'title' => 'Followed Artists',
         ]);
     }
 
-    public function releases(Request $request, IpInfo $location, Tracker $tracker)
+    public function releases(Request $request, IpInfo $location, Tracker $tracker, Releases $releases)
     {
         $user = Auth::user();
         if (!empty($user)) {
             $country = $user->country;
-            $categoryIds = $user->categories->pluck('id')->all();
             $categories = $user->categories;
+            $categoryIds = $categories->pluck('id')->all();
         } else {
-            $country = $this->processCountryCode($tracker, $location->getCountryCode($request));
+            if (!empty(session('country'))) {
+                $country = session('country');
+            } else {
+                $country = $this->processCountryCode($tracker, $location->getCountryCode($request));
+                session(['country' => $country]);
+            }
             $categoryIds = session('subscriptions') ?? [];
             $categories = Category::whereIn('id', $categoryIds)->get();
         }
 
-        $genreIds = Genre::whereHas('categories', function (Builder $query) use ($categoryIds) {
-            $query->whereIn('id', $categoryIds);
-        })->get()->unique('id')->pluck('id')->all();
+        $onlyAlbums = $this->getOnlyAlbumsFlag($request);
+        $page = $this->getPaginationPage($request);
 
-        $artistIds = Connection::whereIn('genre_id', $genreIds)->get()->unique('artist_id')->pluck('artist_id')->all();
-
-        $only_albums = $this->getOnlyAlbumsFlag($request);
-
-        $albums = Album::whereIn('artist_id', $artistIds)
-            ->whereJsonContains('markets', $country)
-            ->when($only_albums, function ($query) {
-                $query->where('type', 'album');
-            })
-            ->orderBy('release_date', 'desc')
-            ->orderBy('popularity', 'desc')
-            ->paginate(config('spotifyConfig.pagination'));
+        $albums = $releases->getReleaseAlbumsPaginator(
+            categoryIds: $categoryIds,
+            country: $country,
+            onlyAlbums: $onlyAlbums,
+            page: $page
+        );
 
         $newReleases = $albums->unique(function ($item) {
-            return $item['name'] . $item['artist_id'];
+            return $item->name . $item->artist->id;
         })->groupby('release_date');
 
         return view('albums', [
             'newReleases' => $newReleases,
             'albums' => $albums,
             'categories' => $categories,
-            'only_albums' => $only_albums,
+            'onlyAlbums' => $onlyAlbums,
             'current_route' => 'releases',
             'title' => 'Releases by Genre',
         ]);
@@ -108,7 +97,10 @@ class HomeController extends Controller
             $userCategories = Category::whereIn('id', $subscriptions)->get();
         }
 
-        $allCategories = Category::where('name', '<>', 'Other')->orderBy('name')->get();
+        $allCategories = Cache::remember('all_categories', config('spotifyConfig.cache_ttl'), function () {
+            return Category::where('name', '<>', 'Other')->orderBy('name')->get();
+        });
+
         return view('genres', ['userCategories' => $userCategories, 'allCategories' => $allCategories]);
     }
 
@@ -159,18 +151,31 @@ class HomeController extends Controller
 
     /**
      * @param Request $request
-     * @return bool
+     * @return int
      */
-    private function getOnlyAlbumsFlag(Request $request): bool
+    private function getOnlyAlbumsFlag(Request $request): int
     {
         if ($request->exists('only_albums')) {
             if ($request->get('only_albums') == 1) {
-                session(['only_albums' => true]);
+                session(['only_albums' => 1]);
             } else {
-                session(['only_albums' => false]);
+                session(['only_albums' => 0]);
             }
         }
 
-        return session('only_albums') ?? false;
+        return session('only_albums') ?? 0;
+    }
+
+    /**
+     * @param Request $request
+     * @return int
+     */
+    private function getPaginationPage(Request $request): int
+    {
+        if ($request->exists('page')) {
+            return $request->get('page');
+        }
+
+        return 1;
     }
 }

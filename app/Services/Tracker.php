@@ -225,7 +225,7 @@ class Tracker
 
             foreach ($albums as $album) {
                 try {
-                    if ($this->isAlbumOk($album)) {
+                    if (!empty($album) && $this->isAlbumOk($album)) {
                         $this->saveArtist($album->artists[0]);
                         $albumSpotifyIds[] = $album->id;
                         $artistSpotifyIds[] = $album->artists[0]->id;
@@ -263,10 +263,15 @@ class Tracker
      */
     public function getCurrentMarkets(): array
     {
-        $accessToken = $this->getClientAccessToken();
-
         try {
-            $markets = Spotify::getMarkets($accessToken)->markets;
+            $markets = Cache::remember(
+                key: 'current_markets',
+                ttl: config('spotifyConfig.cache_ttl'),
+                callback: function () {
+                    $accessToken = $this->getClientAccessToken();
+                    return Spotify::getMarkets($accessToken)->markets;
+                }
+            );
         } catch (Exception $e) {
             Log::error($e->getMessage(), [
                 'method' => __METHOD__
@@ -349,15 +354,17 @@ class Tracker
      */
     private function saveAlbum(stdClass $fullAlbum): void
     {
-        Album::create([
-            'spotify_id' => $fullAlbum->id,
-            'name' => $fullAlbum->name,
-            'release_date' => $fullAlbum->release_date,
-            'artist_id' => Artist::where('spotify_id', $fullAlbum->artists[0]->id)->first()->id,
-            'markets' => json_encode($fullAlbum->available_markets, JSON_UNESCAPED_UNICODE),
-            'image' => $fullAlbum->images[1]->url,
-            'popularity' => $fullAlbum->popularity,
-            'type' => $fullAlbum->album_type,
+        Album::firstOrCreate([
+            ['spotify_id' => $fullAlbum->id],
+            [
+                'name' => $fullAlbum->name,
+                'release_date' => $fullAlbum->release_date,
+                'artist_id' => Artist::where('spotify_id', $fullAlbum->artists[0]->id)->first()->id,
+                'markets' => json_encode($fullAlbum->available_markets, JSON_UNESCAPED_UNICODE),
+                'image' => $fullAlbum->images[1]->url,
+                'popularity' => $fullAlbum->popularity,
+                'type' => $fullAlbum->album_type,
+            ]
         ]);
     }
 

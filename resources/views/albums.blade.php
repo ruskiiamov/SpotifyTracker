@@ -20,7 +20,7 @@
             </div>
         @endif
         <div class="flex justify-center mb-6">
-            @if($only_albums)
+            @if($onlyAlbums)
                 <div class="flex bg-green outline outline-green outline-2 outline-offset-2 text-white py-2 px-4 mx-2 rounded-full w-60 h-8 flex justify-center items-center">
                     <p>Only albums</p>
                 </div>
@@ -39,7 +39,7 @@
         @if($albums->hasPages())
             <div class="flex justify-center mb-6">
                 @if(!$albums->onFirstPage())
-                    <a href="{{ $albums->previousPageUrl() }}" class="flex bg-green text-black font-bold py-2 px-4 mx-2 rounded-full w-24 h-12 flex justify-center items-center">
+                    <a href="{{ route($current_route, ['page' => $albums->currentPage() - 1]) }}" class="flex bg-green text-black font-bold py-2 px-4 mx-2 rounded-full w-24 h-12 flex justify-center items-center">
                         <p>Prev</p>
                     </a>
                 @else
@@ -48,7 +48,7 @@
                     </div>
                 @endif
                 @if($albums->hasMorePages())
-                    <a href="{{ $albums->nextPageUrl() }}" class="flex bg-green text-black font-bold py-2 px-4 mx-2 rounded-full w-24 h-12 flex justify-center items-center">
+                    <a href="{{ route($current_route, ['page' => $albums->currentPage() + 1]) }}" class="flex bg-green text-black font-bold py-2 px-4 mx-2 rounded-full w-24 h-12 flex justify-center items-center">
                         <p>Next</p>
                     </a>
                 @else
@@ -76,7 +76,7 @@
                                     <span class="mr-2 my-2 px-2 text-lg text-white bg-black border border-white rounded-full inline-block">{{ $newRelease->type }}</span>
                                 </div>
                                 <div>
-                                    @foreach($newRelease->artist->genres->unique() as $genre)<span class="mr-2 my-1 px-1 text-base text-white bg-green border border-green rounded-full inline-block">{{ $genre->name }}</span>@endforeach
+                                    @foreach($newRelease->artist->genres as $genre)<span class="mr-2 my-1 px-1 text-base text-white bg-green border border-green rounded-full inline-block">{{ $genre->name }}</span>@endforeach
                                 </div>
                                 <div>
                                     <span>popularity: {{$newRelease->popularity}}/100</span>
@@ -90,7 +90,7 @@
         @if($albums->hasPages())
             <div class="flex justify-center mb-6">
                 @if(!$albums->onFirstPage())
-                    <a href="{{ $albums->previousPageUrl() }}" class="flex bg-green text-black font-bold py-2 px-4 mx-2 rounded-full w-24 h-12 flex justify-center items-center">
+                    <a href="{{ route($current_route, ['page' => $albums->currentPage() - 1]) }}" class="flex bg-green text-black font-bold py-2 px-4 mx-2 rounded-full w-24 h-12 flex justify-center items-center">
                         <p>Prev</p>
                     </a>
                 @else
@@ -99,7 +99,7 @@
                     </div>
                 @endif
                 @if($albums->hasMorePages())
-                    <a href="{{ $albums->nextPageUrl() }}" class="flex bg-green text-black font-bold py-2 px-4 mx-2 rounded-full w-24 h-12 flex justify-center items-center">
+                    <a href="{{ route($current_route, ['page' => $albums->currentPage() + 1]) }}" class="flex bg-green text-black font-bold py-2 px-4 mx-2 rounded-full w-24 h-12 flex justify-center items-center">
                         <p>Next</p>
                     </a>
                 @else

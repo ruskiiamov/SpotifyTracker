@@ -20,6 +20,17 @@ class Album extends Model
         'type'
     ];
 
+    protected $visible = [
+        'id',
+        'spotify_id',
+        'name',
+        'release_date',
+        'artist',
+        'image',
+        'popularity',
+        'type'
+    ];
+
     public function artist()
     {
         return $this->belongsTo(Artist::class);

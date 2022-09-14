@@ -15,6 +15,21 @@ class Artist extends Model
         'checked_at',
     ];
 
+    protected $visible = [
+        'id',
+        'name',
+        'genres',
+    ];
+
+    protected $appends = [
+        'genres'
+    ];
+
+    public function getGenresAttribute()
+    {
+        return $this->genres()->get();
+    }
+
     public function followings()
     {
         return $this->hasMany(Following::class);

@@ -8,6 +8,7 @@ use App\Interfaces\GenreCategorizerInterface;
 use App\Models\Category;
 use App\Models\Genre;
 use App\Models\MissedGenresArtist;
+use Illuminate\Support\Collection;
 
 class GenreCategorizer implements GenreCategorizerInterface
 {
@@ -24,6 +25,10 @@ class GenreCategorizer implements GenreCategorizerInterface
         private readonly string $other
     ) {}
 
+    /**
+     * @param Genre $genre
+     * @return void
+     */
     public function categorize(Genre $genre): void
     {
         if (in_array($genre->name, $this->bannedGenreNames)) {
@@ -33,6 +38,24 @@ class GenreCategorizer implements GenreCategorizerInterface
 
         $categoryIds = $this->getGenreCategoryIds($genre);
         $genre->categories()->sync($categoryIds);
+    }
+
+    /**
+     * @return Collection
+     */
+    public function getCategoryIdsSets(): Collection
+    {
+        $categoryIds = Category::where('name', '<>', $this->other)->get()->pluck('id')->toArray();
+
+        $categoryIdsSets = collect([[]]);
+        foreach ($categoryIds as $element) {
+            foreach ($categoryIdsSets as $combination) {
+                $categoryIdsSets->push(array_merge([$element], $combination));
+            }
+        }
+        $categoryIdsSets->shift();
+
+        return $categoryIdsSets;
     }
 
     /**

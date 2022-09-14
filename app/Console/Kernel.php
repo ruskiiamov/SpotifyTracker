@@ -25,12 +25,13 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         if (config('schedule.enabled')) {
-            $schedule->command('app:queue-update-followed-artists')->everySixHours();
-            $schedule->command('app:queue-add-followed-albums')->everySixHours();
-            $schedule->command('app:queue-add-new-releases')->twiceDaily(1, 13);
-            $schedule->command('app:queue-clear-artists')->cron('30 1,13 * * *');
-            $schedule->command('app:queue-update-albums')->twiceDaily(2, 14);
-            $schedule->command('app:scan-artists-with-missed-genres')->dailyAt('15:00');
+            $schedule->command('app:queue-update-followed-artists')->cron('0 0,12 * * *');
+            $schedule->command('app:queue-add-followed-albums')->cron('30 0,12 * * *');
+            $schedule->command('app:queue-add-new-releases')->cron('0 1,13 * * *');
+            $schedule->command('app:queue-clear-artists')->cron('28 1,13 * * *');
+            $schedule->command('app:queue-update-albums')->cron('30 1,13 * * *');
+            $schedule->command('app:warm-up-cache')->cron('0 2,14 * * *');
+            $schedule->command('app:scan-artists-with-missed-genres')->cron('0 15 * * *');
             $schedule->command('app:rate-limit-check')->everyThirtyMinutes();
         }
     }

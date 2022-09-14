@@ -13,6 +13,11 @@ class Genre extends Model
         'name',
     ];
 
+    protected $visible = [
+        'id',
+        'name',
+    ];
+
     public function categories()
     {
         return $this->belongsToMany(Category::class, 'genre_category');
