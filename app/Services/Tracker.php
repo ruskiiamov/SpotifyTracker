@@ -354,7 +354,7 @@ class Tracker
      */
     private function saveAlbum(stdClass $fullAlbum): void
     {
-        Album::firstOrCreate([
+        Album::firstOrCreate(
             ['spotify_id' => $fullAlbum->id],
             [
                 'name' => $fullAlbum->name,
@@ -365,7 +365,7 @@ class Tracker
                 'popularity' => $fullAlbum->popularity,
                 'type' => $fullAlbum->album_type,
             ]
-        ]);
+        );
     }
 
     /**
