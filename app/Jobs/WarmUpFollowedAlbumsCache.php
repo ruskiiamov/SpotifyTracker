@@ -6,6 +6,7 @@ namespace App\Jobs;
 
 use App\Models\User;
 use App\Services\Releases;
+use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -13,6 +14,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class WarmUpFollowedAlbumsCache implements ShouldQueue
 {
@@ -51,22 +53,33 @@ class WarmUpFollowedAlbumsCache implements ShouldQueue
      */
     public function handle(Releases $releases)
     {
-        for ($onlyAlbums = 0; $onlyAlbums <= 1; $onlyAlbums++) {
-            $followedAlbumsQueryBuilder = $releases->getFollowedAlbumsQueryBuilder(
-                user: $this->user,
-                onlyAlbums: $onlyAlbums,
-            );
-            $followedAlbumIds = $followedAlbumsQueryBuilder
-                ->get('id')
-                ->pluck('id');
+        if (!Cache::has("followed={$this->user->id}_cached")) {
+            Cache::put("followed={$this->user->id}_cached", 1, 3600);
+            for ($onlyAlbums = 0; $onlyAlbums <= 1; $onlyAlbums++) {
+                $followedAlbumsQueryBuilder = $releases->getFollowedAlbumsQueryBuilder(
+                    user: $this->user,
+                    onlyAlbums: $onlyAlbums,
+                );
 
-            $followedCacheKey = "followed={$this->user->id}::only_albums={$onlyAlbums}";
+                $followedCacheKey = "followed={$this->user->id}::only_albums={$onlyAlbums}";
 
-            Cache::put(
-                key: $followedCacheKey,
-                value: $followedAlbumIds->toJson(),
-                ttl: config('spotifyConfig.cache_ttl')
-            );
+                try {
+                    $followedAlbumIds = $followedAlbumsQueryBuilder
+                        ->get('id')
+                        ->pluck('id');
+
+                    Cache::put(
+                        key: $followedCacheKey,
+                        value: $followedAlbumIds->toJson(),
+                        ttl: config('spotifyConfig.cache_ttl')
+                    );
+                } catch (Exception $e) {
+                    Log::error($e->getMessage(), [
+                        'method' => __METHOD__,
+                        'cache_key' => $followedCacheKey,
+                    ]);
+                }
+            }
         }
     }
 }

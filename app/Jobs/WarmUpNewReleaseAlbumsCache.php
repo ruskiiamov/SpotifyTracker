@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Interfaces\GenreCategorizerInterface;
 use App\Services\Releases;
+use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -11,6 +12,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class WarmUpNewReleaseAlbumsCache implements ShouldQueue
 {
@@ -49,29 +51,39 @@ class WarmUpNewReleaseAlbumsCache implements ShouldQueue
      */
     public function handle(Releases $releases, GenreCategorizerInterface $genreCategorizer)
     {
-        $categoryIdsSets = $genreCategorizer->getCategoryIdsSets();
+        if (!Cache::has("country={$this->market}_cached")) {
+            Cache::put("country={$this->market}_cached", 1, 3600);
+            $categoryIdsSets = $genreCategorizer->getCategoryIdsSets();
+            for ($onlyAlbums = 0; $onlyAlbums <= 1; $onlyAlbums++) {
+                foreach ($categoryIdsSets as $categoryIds) {
+                    sort($categoryIds);
+                    $categoryIdsString = implode(',', $categoryIds);
 
-        for ($onlyAlbums = 0; $onlyAlbums <= 1; $onlyAlbums++) {
-            foreach ($categoryIdsSets as $categoryIds) {
-                sort($categoryIds);
-                $categoryIdsString = implode(',', $categoryIds);
+                    $releaseAlbumsQueryBuilder = $releases->getReleaseAlbumsQueryBuilder(
+                        country: $this->market,
+                        onlyAlbums: $onlyAlbums,
+                        categoryIds: $categoryIds
+                    );
 
-                $releaseAlbumsQueryBuilder = $releases->getReleaseAlbumsQueryBuilder(
-                    country: $this->market,
-                    onlyAlbums: $onlyAlbums,
-                    categoryIds: $categoryIds
-                );
-                $releaseAlbumIds = $releaseAlbumsQueryBuilder
-                    ->get('id')
-                    ->pluck('id');
+                    $releasesCacheKey = "releases={$categoryIdsString}::country={$this->market}::only_albums={$onlyAlbums}";
 
-                $releasesCacheKey = "releases={$categoryIdsString}::country={$this->market}::only_albums={$onlyAlbums}";
+                    try {
+                        $releaseAlbumIds = $releaseAlbumsQueryBuilder
+                            ->get('id')
+                            ->pluck('id');
 
-                Cache::put(
-                    key: $releasesCacheKey,
-                    value: $releaseAlbumIds->toJson(),
-                    ttl: config('spotifyConfig.cache_ttl')
-                );
+                        Cache::put(
+                            key: $releasesCacheKey,
+                            value: $releaseAlbumIds->toJson(),
+                            ttl: config('spotifyConfig.cache_ttl')
+                        );
+                    } catch (Exception $e) {
+                        Log::error($e->getMessage(), [
+                            'method' => __METHOD__,
+                            'cache_key' => $releasesCacheKey,
+                        ]);
+                    }
+                }
             }
         }
     }
