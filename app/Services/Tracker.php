@@ -13,6 +13,7 @@ use App\Facades\Spotify;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use stdClass;
@@ -27,6 +28,7 @@ class Tracker
      * @param array $artistIdExceptions
      * @param array $bannedGenreNames
      * @param GenreCategorizerInterface $genreCategorizer
+     * @param IpInfo $location
      */
     public function __construct(
         private readonly int   $getSeveralAlbumsLimit,
@@ -35,7 +37,8 @@ class Tracker
         private readonly array $exceptions,
         private readonly array $artistIdExceptions,
         private readonly array $bannedGenreNames,
-        private readonly GenreCategorizerInterface $genreCategorizer
+        private readonly GenreCategorizerInterface $genreCategorizer,
+        private readonly IpInfo $location
     ) {}
 
     /**
@@ -49,7 +52,7 @@ class Tracker
         $actualArtistsIdList = [];
 
         while (true) {
-            $result = Spotify::getFollowedArtists($accessToken, $after);
+            $result = Spotify::getFollowedArtists($accessToken, $after); dd($result);
             $artists = $result->artists->items;
 
             foreach ($artists as $item) {
@@ -279,6 +282,25 @@ class Tracker
         }
 
         return $markets ?? [];
+    }
+
+    /**
+     * @param Request $request
+     * @return string
+     */
+    public function getCountryCode(Request $request): string
+    {
+        if (!empty(session('country'))) {
+            return session('country');
+        }
+
+        $countryCode = $this->location->getCountryCode($request->ip());
+        if (!isset($countryCode) || !in_array($countryCode, $this->getCurrentMarkets())) {
+            $countryCode = config('spotifyConfig.default_market');
+        }
+        session(['country' => $countryCode]);
+
+        return $countryCode;
     }
 
     /**

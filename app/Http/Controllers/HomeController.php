@@ -45,7 +45,7 @@ class HomeController extends Controller
         ]);
     }
 
-    public function releases(Request $request, IpInfo $location, Tracker $tracker, Releases $releases)
+    public function releases(Request $request, Tracker $tracker, Releases $releases)
     {
         $user = Auth::user();
         if (!empty($user)) {
@@ -53,12 +53,7 @@ class HomeController extends Controller
             $categories = $user->categories;
             $categoryIds = $categories->pluck('id')->all();
         } else {
-            if (!empty(session('country'))) {
-                $country = session('country');
-            } else {
-                $country = $this->processCountryCode($tracker, $location->getCountryCode($request));
-                session(['country' => $country]);
-            }
+            $country = $tracker->getCountryCode($request);
             $categoryIds = session('subscriptions') ?? [];
             $categories = Category::whereIn('id', $categoryIds)->get();
         }
@@ -140,20 +135,6 @@ class HomeController extends Controller
         }
 
         return redirect()->route('releases');
-    }
-
-    /**
-     * @param Tracker $tracker
-     * @param string|null $countryCode
-     * @return string
-     */
-    private function processCountryCode(Tracker $tracker, string $countryCode = null): string
-    {
-        if (!isset($countryCode) || !in_array($countryCode, $tracker->getCurrentMarkets())) {
-            return config('spotifyConfig.default_market');
-        }
-
-        return $countryCode;
     }
 
     /**

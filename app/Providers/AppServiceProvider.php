@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Interfaces\GenreCategorizerInterface;
 use App\Services\GenreCategorizer;
+use App\Services\IpInfo;
 use App\Services\Tracker;
 use Illuminate\Support\ServiceProvider;
 
@@ -24,7 +25,8 @@ class AppServiceProvider extends ServiceProvider
                 exceptions: config('spotifyConfig.exceptions'),
                 artistIdExceptions: config('spotifyConfig.artistIdExceptions'),
                 bannedGenreNames: config('genres.bannedGenreNames'),
-                genreCategorizer: $this->app->make(GenreCategorizerInterface::class)
+                genreCategorizer: $this->app->make(GenreCategorizerInterface::class),
+                location: new IpInfo()
             );
         });
 

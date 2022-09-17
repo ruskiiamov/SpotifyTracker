@@ -15,7 +15,7 @@ class Spotify
     private $authUrl = 'https://accounts.spotify.com/authorize';
     private $tokenUrl = 'https://accounts.spotify.com/api/token';
     private $apiUrl = 'https://api.spotify.com/v1';
-    private $scope = 'user-read-email user-read-private user-follow-read user-library-read';
+    private $scope = 'user-follow-read';
 
     public function getAuthUrl()
     {

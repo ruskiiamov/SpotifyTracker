@@ -18,7 +18,7 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
-        'email',
+        'spotify_id',
         'country',
         'refresh_token',
     ];
