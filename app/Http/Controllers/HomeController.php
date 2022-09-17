@@ -83,7 +83,6 @@ class HomeController extends Controller
             'categories' => $categories,
             'onlyAlbums' => $onlyAlbums,
             'current_route' => 'releases',
-            'title' => 'Releases by Genre',
         ]);
     }
 

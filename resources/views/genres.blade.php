@@ -1,7 +1,4 @@
 <x-layout>
-    <x-slot name="info">
-    </x-slot>
-
     <x-slot name="auth">
         @if(!empty(auth()->user()))
         <a href="{{ route('logout') }}" class="font-bold text-white text-xl">Logout</a>

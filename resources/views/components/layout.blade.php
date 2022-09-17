@@ -17,7 +17,6 @@
             <a href="{{ route('index') }}" class="text-3xl ">Release</a>
             <a href="{{ route('index') }}" class="font-bold text-3xl ">Hunter</a>
         </div>
-        <div class="flex items-center py-2">{{ $info }}</div>
         <div class="flex items-center py-2">{{ $auth }}</div>
     </div>
 </header>
