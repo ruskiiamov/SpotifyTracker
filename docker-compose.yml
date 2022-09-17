@@ -3,7 +3,7 @@ version: "3"
 services:
 
   nginx:
-    image: nginx:latest
+    image: nginx:1.23.1
     restart: always
     depends_on:
       - php-fpm
@@ -45,7 +45,7 @@ services:
     command: composer install
 
   pgsql:
-    image: postgres:latest
+    image: postgres:14.5
     restart: always
     volumes:
       - ./docker/postgres/data:/var/lib/postgresql/data
@@ -57,7 +57,9 @@ services:
       - "5432:5432"
 
   redis:
-    image: redis:latest
+    image: redis:6.2.7
     restart: always
+    environment:
+      - REDIS_REPLICATION_MODE=master
     ports:
       - "6379:6379"
