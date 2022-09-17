@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
+use PHPUnit\Exception;
 
 class Spotify
 {
@@ -329,6 +330,12 @@ class Spotify
 
     private function saveClientAccessToken($accessToken, $expires_in)
     {
-        Cache::put('client_access_token', $accessToken, $expires_in - 10);
+        try {
+            Cache::put('client_access_token', $accessToken, $expires_in - 10);
+        } catch (Exception $e) {
+            Log::error($e->getMessage(), [
+                'method' => __METHOD__
+            ]);
+        }
     }
 }

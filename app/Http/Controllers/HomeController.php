@@ -10,6 +10,7 @@ use App\Services\Tracker;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class HomeController extends Controller
 {
@@ -97,9 +98,16 @@ class HomeController extends Controller
             $userCategories = Category::whereIn('id', $subscriptions)->get();
         }
 
-        $allCategories = Cache::remember('all_categories', config('spotifyConfig.cache_ttl'), function () {
-            return Category::where('name', '<>', 'Other')->orderBy('name')->get();
-        });
+        try {
+            $allCategories = Cache::remember('all_categories', config('spotifyConfig.cache_ttl'), function () {
+                return Category::where('name', '<>', 'Other')->orderBy('name')->get();
+            });
+        } catch (\Exception $e) {
+            Log::error($e->getMessage(), [
+                'method' => __METHOD__
+            ]);
+            $allCategories = Category::where('name', '<>', 'Other')->orderBy('name')->get();
+        }
 
         return view('genres', ['userCategories' => $userCategories, 'allCategories' => $allCategories]);
     }
