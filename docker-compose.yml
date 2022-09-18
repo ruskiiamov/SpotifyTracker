@@ -8,13 +8,22 @@ services:
     depends_on:
       - php-fpm
     volumes:
-      - ./docker/nginx/templates:/etc/nginx/templates
+      - ./docker/nginx/templates:/etc/nginx/templates:ro #for prod
+#      - ./docker/nginx/templates.local:/etc/nginx/templates:ro #for local
+      - ./docker/certbot/www/:/var/www/certbot/:ro
       - ${APP_PATH}:/var/www/html
     environment:
       - ROOT_DIR=${DOCUMENT_ROOT}
       - PHP_FPM=php-fpm
     ports:
       - "80:80"
+      - "443:443"
+
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - ./docker/certbot/www/:/var/www/certbot/:rw
+      - ./docker/certbot/conf/:/etc/letsencrypt/:rw
 
   php-fpm:
     build:
