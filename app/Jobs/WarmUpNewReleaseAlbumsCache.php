@@ -52,7 +52,7 @@ class WarmUpNewReleaseAlbumsCache implements ShouldQueue
     public function handle(Releases $releases, GenreCategorizerInterface $genreCategorizer)
     {
         if (!Cache::has("country={$this->market}_cached")) {
-            Cache::put("country={$this->market}_cached", 1, 3600);
+            Cache::put("country={$this->market}_cached", 1, config('spotifyConfig.cache_lock_ttl'));
             $categoryIdsSets = $genreCategorizer->getCategoryIdsSets();
             for ($onlyAlbums = 0; $onlyAlbums <= 1; $onlyAlbums++) {
                 foreach ($categoryIdsSets as $categoryIds) {

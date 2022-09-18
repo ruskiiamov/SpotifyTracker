@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Jobs;
 
 use App\Models\Album;
@@ -13,7 +15,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
-class WarmUpAlbumsCache implements ShouldQueue
+class WarmUpAlbumCache implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -23,6 +25,15 @@ class WarmUpAlbumsCache implements ShouldQueue
      * @var int
      */
     public int $tries = 3;
+
+    /**
+     * Create a new job instance.
+     *
+     * @return void
+     */
+    public function __construct(
+        private readonly int $albumId
+    ) {}
 
     /**
      * Calculate the number of seconds to wait before retrying the job.
@@ -39,24 +50,22 @@ class WarmUpAlbumsCache implements ShouldQueue
      */
     public function handle()
     {
-        if (!Cache::has('albums_cached')) {
-            Cache::put('albums_cached', 1, config('spotifyConfig.cache_lock_ttl'));
-            Album::with('artist')->chunk(200, function ($albums) {
-                foreach ($albums as $album) {
-                    try {
-                        Cache::put(
-                            key: 'album_id=' . $album->id,
-                            value: $album->toJson(),
-                            ttl: config('spotifyConfig.cache_ttl')
-                        );
-                    } catch (Exception $e) {
-                        Log::error($e->getMessage(), [
-                            'method' => __METHOD__,
-                            'album_id' => $album->id ?? null,
-                        ]);
-                    }
-                }
-            });
+        $key = 'album_id=' . $this->albumId;
+
+        if (!Cache::has($key)) {
+            $album = Album::with('artist')->find($this->albumId);
+            try {
+                Cache::put(
+                    key: $key,
+                    value: $album->toJson(),
+                    ttl: config('spotifyConfig.cache_ttl')
+                );
+            } catch (Exception $e) {
+                Log::error($e->getMessage(), [
+                    'method' => __METHOD__,
+                    'album_id' => $this->albumId ?? null,
+                ]);
+            }
         }
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Jobs\WarmUpAlbumCache;
 use App\Jobs\WarmUpAlbumsCache;
 use App\Jobs\WarmUpFollowedAlbumsCache;
 use App\Jobs\WarmUpNewReleaseAlbumsCache;
@@ -146,8 +147,14 @@ class Releases
         $albums = Cache::many($albumCacheKeys);
         $albumsObjects = Arr::map($albums, function ($value, $key) {
             if ($value == null) {
-                WarmUpAlbumsCache::dispatch()->onQueue('high');
                 $albumId = str_replace('album_id=', '', $key);
+
+                if (Cache::has('albums_cached')) {
+                    WarmUpAlbumCache::dispatch($albumId)->onQueue('high');
+                } else {
+                    WarmUpAlbumsCache::dispatch()->onQueue('high');
+                }
+
                 return Album::with('artist')->find($albumId);
             }
             return json_decode($value);

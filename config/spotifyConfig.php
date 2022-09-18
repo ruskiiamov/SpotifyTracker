@@ -12,7 +12,8 @@ return [
 
     'pagination' => 20,
 
-    'cache_ttl' => 12 * 60 * 60,
+    'cache_ttl' => 18 * 60 * 60,
+    'cache_lock_ttl' => 30 * 60,
 
     //banned words in album names
     'exceptions' => ['live', 'remix', 'anniversary', 'deluxe', 'expanded', 'instrumentals', 'best', 'soundtrack',

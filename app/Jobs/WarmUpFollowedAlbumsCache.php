@@ -54,7 +54,7 @@ class WarmUpFollowedAlbumsCache implements ShouldQueue
     public function handle(Releases $releases)
     {
         if (!Cache::has("followed={$this->user->id}_cached")) {
-            Cache::put("followed={$this->user->id}_cached", 1, 3600);
+            Cache::put("followed={$this->user->id}_cached", 1, config('spotifyConfig.cache_lock_ttl'));
             for ($onlyAlbums = 0; $onlyAlbums <= 1; $onlyAlbums++) {
                 $followedAlbumsQueryBuilder = $releases->getFollowedAlbumsQueryBuilder(
                     user: $this->user,
