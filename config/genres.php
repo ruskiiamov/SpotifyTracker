@@ -42,7 +42,8 @@ return [
     'specialKeyWords' => [
         ROCK => ['pop punk', 'rap rock', 'ska punk', 'dance-punk', 'dance rock', 'straight edge', 'britpop', 'ponk',
             'ukhc', 'screamo', 'beatlesque', 'funk metal'],
-        POP => ['singer-songwriter', 'diva house', 'laulaja-lauluntekija', 'francoton', 'schlager', 'chanson'],
+        POP => ['singer-songwriter', 'diva house', 'laulaja-lauluntekija', 'francoton', 'schlager', 'chanson',
+            'j-division'],
         HIP_HOP => ['funk mtg', 'funk consciente', 'funk ostentacao', 'funk paulista', 'drain', 'psychokore',
             'lo-fi beat', 'japanese beats', 'lo-fi product', 'zxc', 'zhenskiy rep', 'hip house', 'rave funk'],
         WORLD => ['carioca', 'rocksteady', 'dancehall', 'azontobeats', 'manguebeat', 'afrobeat', 'axe', 'forro', 'mpb',
@@ -62,5 +63,5 @@ return [
         'binaural', 'bornehistorier', 'jirai kei', 'erotic product', 'puirt-a-beul', 'massage', 'zen', 'mindfulness',
         'classic bollywood', 'filmi', 'modern bollywood', 'meditation', 'ilahiler', 'lesen', 'liedermacher',
         'disney piano', 'easy listening', 'lounge', 'therapy', 'chill out', 'cancion infantil latinoamericana', 'anime',
-        'j-acoustic', 'acoustic', 'dublin indie', 'kindermusik'],
+        'j-acoustic', 'acoustic', 'dublin indie', 'kindermusik', 'ensemble stars', 'hypnosis mic', 'cartoon', 'nursery'],
 ];
