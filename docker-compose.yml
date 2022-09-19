@@ -10,7 +10,8 @@ services:
     volumes:
       - ./docker/nginx/templates:/etc/nginx/templates:ro #for prod
 #      - ./docker/nginx/templates.local:/etc/nginx/templates:ro #for local
-      - ./docker/certbot/www/:/var/www/certbot/:ro
+      - ./docker/certbot/www:/var/www/certbot/:ro
+      - ./docker/certbot/conf/:/etc/nginx/ssl/:ro
       - ${APP_PATH}:/var/www/html
     environment:
       - ROOT_DIR=${DOCUMENT_ROOT}
