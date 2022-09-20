@@ -17,6 +17,7 @@ use Illuminate\Pagination\Paginator;
 use Illuminate\Contracts\Pagination\Paginator as PaginatorContract;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class Releases
 {
@@ -36,6 +37,7 @@ class Releases
                 rout: route('followed')
             );
         } else {
+            Log::info('Followed not cached: ' . $followedCacheKey);
             WarmUpFollowedAlbumsCache::dispatch($user)->onQueue('high');
 
             Paginator::currentPageResolver(function () use ($page) {
@@ -70,6 +72,7 @@ class Releases
                 rout: route('releases')
             );
         } else {
+            Log::info('Releases not cached: ' . $releasesCacheKey);
             WarmUpNewReleaseAlbumsCache::dispatch($country)->onQueue('high');
 
             Paginator::currentPageResolver(function () use ($page) {
@@ -147,6 +150,7 @@ class Releases
         $albums = Cache::many($albumCacheKeys);
         $albumsObjects = Arr::map($albums, function ($value, $key) {
             if ($value == null) {
+                Log::info('Album not cached: ' . $key);
                 $albumId = str_replace('album_id=', '', $key);
 
                 if (Cache::has('albums_cached')) {

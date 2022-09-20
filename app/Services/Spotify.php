@@ -12,10 +12,10 @@ use PHPUnit\Exception;
 
 class Spotify
 {
-    private $authUrl = 'https://accounts.spotify.com/authorize';
-    private $tokenUrl = 'https://accounts.spotify.com/api/token';
-    private $apiUrl = 'https://api.spotify.com/v1';
-    private $scope = 'user-follow-read';
+    private string $authUrl = 'https://accounts.spotify.com/authorize';
+    private string $tokenUrl = 'https://accounts.spotify.com/api/token';
+    private string $apiUrl = 'https://api.spotify.com/v1';
+    private string $scope = 'user-follow-read';
 
     public function getAuthUrl()
     {
@@ -294,7 +294,6 @@ class Spotify
                     break;
                 } else {
                     $seconds = RateLimiter::availableIn('spotify-request');
-                    Log::info('Spotify Request: Rate limiter sleep: ' . $seconds);
                     sleep($seconds);
                 }
             }
@@ -302,9 +301,10 @@ class Spotify
             if ($response->successful()) {
                 return $response->object();
             } else {
-                Log::error('Spotify Request: ' . $response->status() . ' - ' . $method . ' ' . $url);
                 if ($response->status() != 429) {
-                    throw new SpotifyRequestException($response->status() . ' - ' . $method . ' ' . $url);
+                    $status = $response->status();
+                    $message = $response->json('error')['message'];
+                    throw new SpotifyRequestException("{$status} - {$message}: {$method} {$url}");
                 } else {
                     $retryAfter = $response->header('Retry-After') ?? 0;
                     Log::info('Spotify Request: Retry-After=' . $retryAfter . ' seconds');
@@ -312,12 +312,12 @@ class Spotify
                         sleep($retryAfter + 1);
                     } else {
                         Cache::put('spotify-requests-available-since', time() + $retryAfter);
-                        throw new SpotifyRequestException('Retry-After time is too big: ' . $retryAfter . ' - ' . $method . ' ' . $url);
+                        throw new SpotifyRequestException('Spotify Request: Retry-After time is too big');
                     }
                 }
             }
         }
-        throw new SpotifyRequestException('Retry limit exceed - ' . $method . ' ' . $url);
+        throw new SpotifyRequestException('Spotify Request: Retry limit exceed');
     }
 
     private function saveAccessToken($accessToken, $expires_in)

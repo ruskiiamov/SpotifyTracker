@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Subscription;
-use App\Services\IpInfo;
 use App\Services\Releases;
 use App\Services\Tracker;
 use Illuminate\Http\Request;
