@@ -31,26 +31,27 @@ return [
         POP => ['pop', 'disco'],
         HIP_HOP => ['hip hop', 'hip-hop', 'rap', 'phonk', 'drill', 'boom bap', 'chillhop'],
         ELECTRONIC => ['trance', 'edm', 'house', 'techno', 'dnb', 'synth', 'electro', 'tronica', 'amapiano', 'club',
-            'bass', 'dub', 'beat', 'glitch', 'dance', 'rave', 'hardstyle', 'rawstyle'],
+            'bass', 'dub', 'beat', 'glitch', 'dance', 'rave'],
         FOLK => ['folk', 'country', 'bluegrass', 'roots', 'americana'],
         BLUES_JAZZ => ['jazz', 'blues', 'funk', 'soul', 'r&b', 'gospel'],
         CLASSICAL => ['classical', 'orchestra', 'romantic'],
-        WORLD => ['samba', 'rumba', 'cumbia', 'tango', 'norteno', 'bossa nova', 'indigenous', 'reggae', 'ska'],
+        WORLD => ['samba', 'rumba', 'cumbia', 'tango', 'norteno', 'bossa nova', 'indigenous', 'reggae', 'ska',
+            'flamenco', 'salsa'],
     ],
 
     //Genre has only one category
     'specialKeyWords' => [
         ROCK => ['pop punk', 'rap rock', 'ska punk', 'dance-punk', 'dance rock', 'straight edge', 'britpop', 'ponk',
-            'ukhc', 'screamo', 'beatlesque', 'funk metal'],
+            'ukhc', 'screamo', 'beatlesque', 'funk metal', 'deathcore'],
         POP => ['singer-songwriter', 'diva house', 'laulaja-lauluntekija', 'francoton', 'schlager', 'chanson',
             'j-division', 'canzone napoletana'],
         HIP_HOP => ['funk mtg', 'funk consciente', 'funk ostentacao', 'funk paulista', 'drain', 'psychokore',
             'lo-fi beat', 'japanese beats', 'lo-fi product', 'zxc', 'zhenskiy rep', 'hip house', 'rave funk'],
         WORLD => ['carioca', 'rocksteady', 'dancehall', 'azontobeats', 'manguebeat', 'afrobeat', 'axe', 'forro', 'mpb',
             'cuarteto', 'pagode', 'mexicana', 'ranchera', 'grupera', 'corrido', 'sungura', 'perreo', 'bhajan', 'ghazal',
-            'enka', 'contemporanea', 'manele', 'cantautor'],
+            'enka', 'contemporanea', 'manele', 'cantautor', 'bachata', 'caliente'],
         ELECTRONIC => ['cyberpunk', 'funky tech house', 'disco house', 'funky house', 'drum and bass', 'future bass',
-            'neurofunk', 'hjemmesnekk', 'new french touch']
+            'neurofunk', 'hjemmesnekk', 'new french touch', 'hardstyle', 'rawstyle', 'jungle']
     ],
 
     'bannedGenreNames' => ['sleep', 'white noise', 'rain', 'world meditation', 'russian chanson', 'kleine hoerspiel',
@@ -64,5 +65,7 @@ return [
         'classic bollywood', 'filmi', 'modern bollywood', 'meditation', 'ilahiler', 'lesen', 'liedermacher',
         'disney piano', 'easy listening', 'lounge', 'therapy', 'chill out', 'cancion infantil latinoamericana', 'anime',
         'j-acoustic', 'acoustic', 'dublin indie', 'kindermusik', 'ensemble stars', 'hypnosis mic', 'cartoon', 'nursery',
-        'polish alternative', 'polish indie', 'theremin', 'musica per bambini', "children's choir", ],
+        'polish alternative', 'polish indie', 'theremin', 'musica per bambini', "children's choir", "children's music",
+        'background music', 'classic soundtrack', 'italian soundtrack', 'vintage italian soundtrack', 'anime piano',
+        'hardcore'],
 ];
