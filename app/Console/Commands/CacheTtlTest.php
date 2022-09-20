@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Redis;
 
 class CacheTtlTest extends Command
 {
@@ -29,11 +30,12 @@ class CacheTtlTest extends Command
     public function handle()
     {
         $key = 'ttl-test';
+        $ttl = 2 * 60 * 60;
 
-        if (!Cache::has($key)) {
+        if (!Redis::exists($key)) {
             Log::info('TTL TEST: <<< KEY NOT FOUND >>>');
-            Cache::put($key, 1, now()->addSeconds(config('spotifyConfig.cache_ttl')));
-            Log::info('TTL TEST: ttl=' . config('spotifyConfig.cache_ttl'));
+            Redis::set($key, 1, $ttl);
+            Log::info('TTL TEST: ttl=' . $ttl);
         } else {
             Log::info('TTL TEST: key exists');
         }
