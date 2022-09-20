@@ -32,7 +32,7 @@ class CacheTtlTest extends Command
 
         if (!Cache::has($key)) {
             Log::info('TTL TEST: <<< KEY NOT FOUND >>>');
-            Cache::put($key, 1, config('spotifyConfig.cache_ttl'));
+            Cache::put($key, 1, now()->addSeconds(config('spotifyConfig.cache_ttl')));
             Log::info('TTL TEST: ttl=' . config('spotifyConfig.cache_ttl'));
         } else {
             Log::info('TTL TEST: key exists');
