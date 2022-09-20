@@ -33,7 +33,7 @@ class Kernel extends ConsoleKernel
             $schedule->command('app:warm-up-cache')->cron('10 0,12 * * *');
             $schedule->command('app:scan-artists-with-missed-genres')->cron('0 1 * * *');
             $schedule->command('app:rate-limit-check')->everyThirtyMinutes();
-            $schedule->command('app:cache-ttl-test')->everyFifteenMinutes();
+            $schedule->command('app:cache-ttl-test')->everyFiveMinutes();
         }
     }
 

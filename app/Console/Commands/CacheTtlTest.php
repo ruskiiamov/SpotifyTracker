@@ -30,15 +30,15 @@ class CacheTtlTest extends Command
     public function handle()
     {
         $key = 'ttl-test';
-        $ttl = 2 * 60 * 60;
+        $ttl = 60 * 60;
 
         if (!Redis::exists($key)) {
             Log::info('TTL TEST: <<< KEY NOT FOUND >>>');
-            Redis::set($key, 1, $ttl);
+            Redis::set($key, 1, 'EX', $ttl);
             Log::info('TTL TEST: ttl=' . $ttl);
         } else {
-            Log::info('TTL TEST: key exists');
+            $ttl = Redis::ttl($key);
+            Log::info('TTL TEST: key exists; ttl=' . $ttl);
         }
-
     }
 }
