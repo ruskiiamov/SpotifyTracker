@@ -31,7 +31,7 @@ return [
         POP => ['pop', 'disco'],
         HIP_HOP => ['hip hop', 'hip-hop', 'rap', 'phonk', 'drill', 'boom bap', 'chillhop'],
         ELECTRONIC => ['trance', 'edm', 'house', 'techno', 'dnb', 'synth', 'electro', 'tronica', 'amapiano', 'club',
-            'bass', 'dub', 'beat', 'glitch', 'dance', 'rave'],
+            'bass', 'dub', 'beat', 'glitch', 'dance', 'rave', 'hardstyle', 'rawstyle'],
         FOLK => ['folk', 'country', 'bluegrass', 'roots', 'americana'],
         BLUES_JAZZ => ['jazz', 'blues', 'funk', 'soul', 'r&b', 'gospel'],
         CLASSICAL => ['classical', 'orchestra', 'romantic'],
@@ -43,14 +43,14 @@ return [
         ROCK => ['pop punk', 'rap rock', 'ska punk', 'dance-punk', 'dance rock', 'straight edge', 'britpop', 'ponk',
             'ukhc', 'screamo', 'beatlesque', 'funk metal'],
         POP => ['singer-songwriter', 'diva house', 'laulaja-lauluntekija', 'francoton', 'schlager', 'chanson',
-            'j-division'],
+            'j-division', 'canzone napoletana'],
         HIP_HOP => ['funk mtg', 'funk consciente', 'funk ostentacao', 'funk paulista', 'drain', 'psychokore',
             'lo-fi beat', 'japanese beats', 'lo-fi product', 'zxc', 'zhenskiy rep', 'hip house', 'rave funk'],
         WORLD => ['carioca', 'rocksteady', 'dancehall', 'azontobeats', 'manguebeat', 'afrobeat', 'axe', 'forro', 'mpb',
             'cuarteto', 'pagode', 'mexicana', 'ranchera', 'grupera', 'corrido', 'sungura', 'perreo', 'bhajan', 'ghazal',
             'enka', 'contemporanea', 'manele', 'cantautor'],
         ELECTRONIC => ['cyberpunk', 'funky tech house', 'disco house', 'funky house', 'drum and bass', 'future bass',
-            'neurofunk']
+            'neurofunk', 'hjemmesnekk', 'new french touch']
     ],
 
     'bannedGenreNames' => ['sleep', 'white noise', 'rain', 'world meditation', 'russian chanson', 'kleine hoerspiel',
@@ -63,5 +63,6 @@ return [
         'binaural', 'bornehistorier', 'jirai kei', 'erotic product', 'puirt-a-beul', 'massage', 'zen', 'mindfulness',
         'classic bollywood', 'filmi', 'modern bollywood', 'meditation', 'ilahiler', 'lesen', 'liedermacher',
         'disney piano', 'easy listening', 'lounge', 'therapy', 'chill out', 'cancion infantil latinoamericana', 'anime',
-        'j-acoustic', 'acoustic', 'dublin indie', 'kindermusik', 'ensemble stars', 'hypnosis mic', 'cartoon', 'nursery'],
+        'j-acoustic', 'acoustic', 'dublin indie', 'kindermusik', 'ensemble stars', 'hypnosis mic', 'cartoon', 'nursery',
+        'polish alternative', 'polish indie', 'theremin', 'musica per bambini', "children's choir", ],
 ];
