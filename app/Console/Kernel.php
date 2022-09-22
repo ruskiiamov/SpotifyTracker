@@ -30,7 +30,7 @@ class Kernel extends ConsoleKernel
             $schedule->command('app:queue-add-new-releases')->cron('4 0,12 * * *');
             $schedule->command('app:queue-clear-artists')->cron('6 0,12 * * *');
             $schedule->command('app:queue-update-albums')->cron('8 0,12 * * *');
-            $schedule->command('app:warm-up-cache')->cron('10 0,12 * * *');
+            //$schedule->command('app:warm-up-cache')->cron('10 0,12 * * *');
             $schedule->command('app:scan-artists-with-missed-genres')->cron('0 1 * * *');
             $schedule->command('app:rate-limit-check')->everyThirtyMinutes();
             $schedule->command('app:cache-ttl-test')->everyFiveMinutes();
