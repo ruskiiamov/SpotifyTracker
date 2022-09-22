@@ -71,6 +71,7 @@ services:
     restart: always
     volumes:
       - ./docker/redis/data:/data
+      - ./docker/redis/redis.conf:/usr/local/etc/redis/redis.conf
     entrypoint: redis-server --appendonly yes
     environment:
       - REDIS_REPLICATION_MODE=master
