@@ -74,6 +74,7 @@ services:
       - ./docker/redis/redis.conf:/usr/local/etc/redis/redis.conf
     entrypoint: redis-server --appendonly yes
     environment:
-      - REDIS_REPLICATION_MODE=master
+      REDIS_REPLICATION_MODE: master
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
     ports:
       - "6379:6379"
