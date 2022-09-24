@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Exceptions\SpotifyRequestException;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -274,7 +273,11 @@ class Spotify
     private function request($method, $url, $parameters = [], $headers = [])
     {
         for ($i = 1; $i <= 3; $i++) {
-            $request = Http::withHeaders($headers)->asForm();
+            $request = Http::withHeaders($headers)->asForm()->retry(3, 1000, function ($exception) {
+                $statusCode = $exception->response->status();
+                Log::info('HTTP Laravel retry; Status code: ' . $statusCode);
+                return ($statusCode >= 500 && $statusCode <= 599);
+            });
 
             while (true) {
                 if (RateLimiter::remaining('spotify-request', config('spotifyConfig.requestRateLimitAttempts'))) {

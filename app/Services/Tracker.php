@@ -52,7 +52,7 @@ class Tracker
         $actualArtistsIdList = [];
 
         while (true) {
-            $result = Spotify::getFollowedArtists($accessToken, $after); dd($result);
+            $result = Spotify::getFollowedArtists($accessToken, $after);
             $artists = $result->artists->items;
 
             foreach ($artists as $item) {
@@ -183,7 +183,7 @@ class Tracker
             } catch (Exception $e) {
                 Log::error($e->getMessage(), [
                     'method' => __METHOD__,
-                    'album_id' => $fullAlbum->id ?? null,
+                    'full_album' => $fullAlbum,
                 ]);
             }
         }
@@ -376,12 +376,17 @@ class Tracker
      */
     private function saveAlbum(stdClass $fullAlbum): void
     {
+        $artist = Artist::firstOrCreate(
+            ['spotify_id' => $fullAlbum->artists[0]->id],
+            ['name' => $fullAlbum->artists[0]->name]
+        );
+
         Album::firstOrCreate(
             ['spotify_id' => $fullAlbum->id],
             [
                 'name' => $fullAlbum->name,
                 'release_date' => $fullAlbum->release_date,
-                'artist_id' => Artist::where('spotify_id', $fullAlbum->artists[0]->id)->first()->id,
+                'artist_id' => $artist->id,
                 'markets' => json_encode($fullAlbum->available_markets, JSON_UNESCAPED_UNICODE),
                 'image' => $fullAlbum->images[1]->url,
                 'popularity' => $fullAlbum->popularity,
@@ -453,7 +458,10 @@ class Tracker
             }
         }
 
-        $artist = Artist::where('spotify_id', $fullArtist->id)->first();
+        $artist = Artist::firstOrCreate(
+            ['spotify_id' => $fullArtist->id],
+            ['name' => $fullArtist->name]
+        );
         $artist->genres()->sync(array_unique($actualGenresIdList));
     }
 
