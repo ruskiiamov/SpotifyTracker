@@ -1,56 +1,48 @@
 <?php
 
-const ROCK = 'Rock/Metal/Punk';
-const POP = 'Pop';
-const HIP_HOP = 'Hip hop';
-const ELECTRONIC = 'Electronic';
-const FOLK = 'Folk/Country';
-const BLUES_JAZZ = 'Blues/Jazz/Soul/Funk';
-const CLASSICAL = 'Classical';
-const WORLD = 'World';
-const OTHER = 'Other';
+use App\Services\GenreCategorizer;
 
 return [
-    'other' => OTHER,
+    'other' => GenreCategorizer::OTHER,
 
     'categories' => [
-        ROCK,
-        POP,
-        HIP_HOP,
-        ELECTRONIC,
-        FOLK,
-        BLUES_JAZZ,
-        CLASSICAL,
-        WORLD,
-        OTHER,
+        GenreCategorizer::ROCK,
+        GenreCategorizer::POP,
+        GenreCategorizer::HIP_HOP,
+        GenreCategorizer::ELECTRONIC,
+        GenreCategorizer::FOLK,
+        GenreCategorizer::BLUES_JAZZ,
+        GenreCategorizer::CLASSICAL,
+        GenreCategorizer::WORLD,
+        GenreCategorizer::OTHER,
     ],
 
     //Genre has several categories
     'regularKeyWords' => [
-        ROCK => ['rock', 'surf', 'punk', 'metal', 'djent', 'pixie'],
-        POP => ['pop', 'disco'],
-        HIP_HOP => ['hip hop', 'hip-hop', 'rap', 'phonk', 'drill', 'boom bap', 'chillhop'],
-        ELECTRONIC => ['trance', 'edm', 'house', 'techno', 'dnb', 'synth', 'electro', 'tronica', 'amapiano', 'club',
+        GenreCategorizer::ROCK => ['rock', 'surf', 'punk', 'metal', 'djent', 'pixie'],
+        GenreCategorizer::POP => ['pop', 'disco'],
+        GenreCategorizer::HIP_HOP => ['hip hop', 'hip-hop', 'rap', 'phonk', 'drill', 'boom bap', 'chillhop'],
+        GenreCategorizer::ELECTRONIC => ['trance', 'edm', 'house', 'techno', 'dnb', 'synth', 'electro', 'tronica', 'amapiano', 'club',
             'bass', 'dub', 'beat', 'glitch', 'dance', 'rave'],
-        FOLK => ['folk', 'country', 'bluegrass', 'roots', 'americana'],
-        BLUES_JAZZ => ['jazz', 'blues', 'funk', 'soul', 'r&b', 'gospel'],
-        CLASSICAL => ['classical', 'orchestra', 'romantic'],
-        WORLD => ['samba', 'rumba', 'cumbia', 'tango', 'norteno', 'bossa nova', 'indigenous', 'reggae', 'ska',
+        GenreCategorizer::FOLK => ['folk', 'country', 'bluegrass', 'roots', 'americana'],
+        GenreCategorizer::BLUES_JAZZ => ['jazz', 'blues', 'funk', 'soul', 'r&b', 'gospel'],
+        GenreCategorizer::CLASSICAL => ['classical', 'orchestra', 'romantic'],
+        GenreCategorizer::WORLD => ['samba', 'rumba', 'cumbia', 'tango', 'norteno', 'bossa nova', 'indigenous', 'reggae', 'ska',
             'flamenco', 'salsa'],
     ],
 
     //Genre has only one category
     'specialKeyWords' => [
-        ROCK => ['pop punk', 'rap rock', 'ska punk', 'dance-punk', 'dance rock', 'straight edge', 'britpop', 'ponk',
+        GenreCategorizer::ROCK => ['pop punk', 'rap rock', 'ska punk', 'dance-punk', 'dance rock', 'straight edge', 'britpop', 'ponk',
             'ukhc', 'screamo', 'beatlesque', 'funk metal', 'deathcore'],
-        POP => ['singer-songwriter', 'diva house', 'laulaja-lauluntekija', 'francoton', 'schlager', 'chanson',
+        GenreCategorizer::POP => ['singer-songwriter', 'diva house', 'laulaja-lauluntekija', 'francoton', 'schlager', 'chanson',
             'j-division', 'canzone napoletana'],
-        HIP_HOP => ['funk mtg', 'funk consciente', 'funk ostentacao', 'funk paulista', 'drain', 'psychokore',
+        GenreCategorizer::HIP_HOP => ['funk mtg', 'funk consciente', 'funk ostentacao', 'funk paulista', 'drain', 'psychokore',
             'lo-fi beat', 'japanese beats', 'lo-fi product', 'zxc', 'zhenskiy rep', 'hip house', 'rave funk'],
-        WORLD => ['carioca', 'rocksteady', 'dancehall', 'azontobeats', 'manguebeat', 'afrobeat', 'axe', 'forro', 'mpb',
+        GenreCategorizer::WORLD => ['carioca', 'rocksteady', 'dancehall', 'azontobeats', 'manguebeat', 'afrobeat', 'axe', 'forro', 'mpb',
             'cuarteto', 'pagode', 'mexicana', 'ranchera', 'grupera', 'corrido', 'sungura', 'perreo', 'bhajan', 'ghazal',
             'enka', 'contemporanea', 'manele', 'cantautor', 'bachata', 'caliente'],
-        ELECTRONIC => ['cyberpunk', 'funky tech house', 'disco house', 'funky house', 'drum and bass', 'future bass',
+        GenreCategorizer::ELECTRONIC => ['cyberpunk', 'funky tech house', 'disco house', 'funky house', 'drum and bass', 'future bass',
             'neurofunk', 'hjemmesnekk', 'new french touch', 'hardstyle', 'rawstyle', 'jungle']
     ],
 

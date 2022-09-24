@@ -12,6 +12,16 @@ use Illuminate\Support\Collection;
 
 class GenreCategorizer implements GenreCategorizerInterface
 {
+    const ROCK = 'Rock/Metal/Punk';
+    const POP = 'Pop';
+    const HIP_HOP = 'Hip hop';
+    const ELECTRONIC = 'Electronic';
+    const FOLK = 'Folk/Country';
+    const BLUES_JAZZ = 'Blues/Jazz/Soul/Funk';
+    const CLASSICAL = 'Classical';
+    const WORLD = 'World';
+    const OTHER = 'Other';
+
     /**
      * @param array $regularKeyWords
      * @param array $specialKeyWords
