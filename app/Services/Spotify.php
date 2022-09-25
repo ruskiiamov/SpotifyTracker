@@ -19,7 +19,7 @@ class Spotify
     public function getAuthUrl()
     {
         $parameters = [
-            'client_id' => env('SPOTIFY_CLIENT_ID'),
+            'client_id' => config('spotifyConfig.client_id'),
             'response_type' => 'code',
             'redirect_uri' => route('callback'),
             'scope' => $this->scope,
@@ -33,11 +33,11 @@ class Spotify
     public function getAccessToken($code)
     {
         $parameters = [
-            'client_id' => env('SPOTIFY_CLIENT_ID'),
+            'client_id' => config('spotifyConfig.client_id'),
             'code' => $code,
             'grant_type' => 'authorization_code',
             'redirect_uri' => route('callback'),
-            'client_secret' => env('SPOTIFY_CLIENT_SECRET'),
+            'client_secret' => config('spotifyConfig.client_secret'),
         ];
 
         $result = $this->request('POST', $this->tokenUrl, $parameters);
@@ -55,7 +55,7 @@ class Spotify
             'refresh_token' => $refreshToken,
         ];
 
-        $base64 = base64_encode(env('SPOTIFY_CLIENT_ID') . ':' . env('SPOTIFY_CLIENT_SECRET'));
+        $base64 = base64_encode(config('spotifyConfig.client_id') . ':' . config('spotifyConfig.client_secret'));
 
         $headers = ['Authorization' => 'Basic ' . $base64];
 
@@ -72,7 +72,7 @@ class Spotify
             'grant_type' => 'client_credentials',
         ];
 
-        $base64 = base64_encode(env('SPOTIFY_CLIENT_ID') . ':' . env('SPOTIFY_CLIENT_SECRET'));
+        $base64 = base64_encode(config('spotifyConfig.client_id') . ':' . config('spotifyConfig.client_secret'));
 
         $headers = ['Authorization' => 'Basic ' . $base64];
 
