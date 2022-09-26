@@ -13,11 +13,11 @@ use Illuminate\Support\Collection;
 class GenreCategorizer implements GenreCategorizerInterface
 {
     const ROCK = 'Rock/Metal/Punk';
-    const POP = 'Pop';
+    const POP_RB_SOUL = 'Pop/R&B/Soul';
     const HIP_HOP = 'Hip hop';
     const ELECTRONIC = 'Electronic';
     const FOLK = 'Folk/Country';
-    const BLUES_JAZZ = 'Blues/Jazz/Soul/Funk';
+    const BLUES_JAZZ_FUNK = 'Blues/Jazz/Funk';
     const CLASSICAL = 'Classical';
     const WORLD = 'World';
     const OTHER = 'Other';
