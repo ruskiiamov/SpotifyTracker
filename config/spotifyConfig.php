@@ -42,6 +42,24 @@ return [
         '7iUy9ctasMRtp5jwWs95Fm', //Lo-Fi Beats
         '6iGoMyoSIjyTxbCRyHREtI', //Sol y Lluvia
         '10gzBoINW3cLJfZUka8Zoe', //Above & Beyond
+        '459INk8vcC0ebEef82WjIK', //Erik Satie
+        '6s1pCNXcbdtQJlsnM1hRIA', //Dmitri Shostakovich
+        '2UqjDAXnDxejEyE0CzfUrZ', //Robert Schumann
+        '7jzR5qj8vFnSu5JHaXgFEr', //Jean Sibelius
+        '430byzy0c5bPn5opiu0SRd', //Edward Elgar
+        '1385hLNbrnbCJGokfH2ac2', //Franz Liszt
+        '1QL7yTHrdahRMpvNtn6rI2', //George Frideric Handel
+        '39FC9x5PaTNYHp5hwlaY4q', //Niccolo Paganini
+        '0roWUeP7Ac4yK4VN6L2gF4', //Gioachino Rossini
+        '2gClsBep1tt1rv1CN210SO', //Gabriel Faure
+        '656RXuyw7CE0dtjdPgjJV6', //Joseph Haydn
+        '6MF58APd3YV72Ln2eVg710', //Felix Mendelssohn
+        '1C1x4MVkql8AiABuTw6DgE', //Richard Wagner
+        '2ANtgfhQkKpsW6EYSDqldz', //Gustav Mahler
+        '3tMLo1k3iUo82coMLWXzxq', //Henry Purcell
+        '6n7nd5iceYpXVwcx8VPpxF', //Antonin Dvorak
+        '436sYg6CZhNefQJogaXeK0', //Camille Saint-Saens
+        '17hR0sYHpx7VYTMRfFUOmY', //Maurice Ravel
     ],
 
     'markets' => [
