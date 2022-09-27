@@ -194,17 +194,19 @@ class Tracker
      */
     public function clearArtists(): void
     {
-        Artist::doesntHave('followings')->doesntHave('albums')->delete();
+        $report['without_albums'] = Artist::doesntHave('followings')->doesntHave('albums')->delete();
 
         Album::whereHas('artist', function (Builder $query) {
             $query->whereIn('spotify_id', $this->artistIdExceptions);
         })->delete();
-        Artist::whereIn('spotify_id', $this->artistIdExceptions)->delete();
+        $report['exceptions'] = Artist::whereIn('spotify_id', $this->artistIdExceptions)->delete();
 
         Album::whereHas('artist', function (Builder $query) {
             $query->doesntHave('followings')->doesntHave('genres');
         })->delete();
-        Artist::doesntHave('followings')->doesntHave('genres')->delete();
+        $report['without_genres'] = Artist::doesntHave('followings')->doesntHave('genres')->delete();
+
+        Log::info(__METHOD__, ['report' => $report]);
     }
 
     /**
