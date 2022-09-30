@@ -7,6 +7,7 @@ namespace App\Console\Commands;
 use App\Interfaces\GenreCategorizerInterface;
 use App\Models\Genre;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Cache;
 
 class CategorizeGenres extends Command
 {
@@ -45,5 +46,7 @@ class CategorizeGenres extends Command
                 $genreCategorizer->categorize($genre);
             }
         });
+
+        Cache::flush();
     }
 }

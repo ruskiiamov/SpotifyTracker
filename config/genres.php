@@ -36,8 +36,9 @@ return [
         GenreCategorizer::ROCK => ['pop punk', 'rap rock', 'ska punk', 'dance-punk', 'dance rock', 'straight edge',
             'britpop', 'ponk', 'ukhc', 'screamo', 'beatlesque', 'funk metal', 'deathcore', 'blues rock', 'funk metal',
             'funk rock', 'classical metal'],
-        GenreCategorizer::POP_RB_SOUL => ['singer-songwriter', 'diva house', 'laulaja-lauluntekija', 'francoton', 'schlager',
-            'chanson', 'j-division', 'canzone napoletana', 'funk pop', 'new romantic', 'brega romantico'],
+        GenreCategorizer::POP_RB_SOUL => ['singer-songwriter', 'diva house', 'laulaja-lauluntekija', 'francoton',
+            'schlager', 'chanson', 'j-division', 'canzone napoletana', 'funk pop', 'new romantic', 'brega romantico',
+            'rebel blues', 'dance pop', 'pop dance', 'electropop', 'synthpop'],
         GenreCategorizer::HIP_HOP => ['funk mtg', 'funk consciente', 'funk ostentacao', 'funk paulista', 'drain',
             'psychokore', 'lo-fi beat', 'japanese beats', 'lo-fi product', 'zxc', 'zhenskiy rep', 'hip house',
             'rave funk', 'funk mandelao', 'funk viral', 'funk 150 bpm', 'brega funk', 'funk bh', 'trap funk',
@@ -47,7 +48,7 @@ return [
             'perreo', 'bhajan', 'ghazal', 'enka', 'contemporanea', 'manele', 'cantautor', 'bachata', 'caliente'],
         GenreCategorizer::ELECTRONIC => ['cyberpunk', 'funky tech house', 'disco house', 'funky house', 'drum and bass',
             'future bass', 'neurofunk', 'hjemmesnekk', 'new french touch', 'hardstyle', 'rawstyle', 'jungle',
-            'jazztronica', 'nu jazz', 'jazz boom bap', 'liquid funk', 'jazzhop', 'drumfunk'],
+            'jazztronica', 'nu jazz', 'jazz boom bap', 'liquid funk', 'jazzhop', 'drumfunk', 'jazzy dnb'],
     ],
 
     'bannedGenreNames' => ['sleep', 'white noise', 'rain', 'world meditation', 'russian chanson', 'kleine hoerspiel',
@@ -64,5 +65,5 @@ return [
         'polish alternative', 'polish indie', 'theremin', 'musica per bambini', "children's choir", "children's music",
         'background music', 'classic soundtrack', 'italian soundtrack', 'vintage italian soundtrack', 'anime piano',
         'hardcore', 'jazz cover', 'bossa nova cover', 'coverchill', 'background jazz', 'funk das antigas',
-        'pop romantico'],
+        'pop romantico', 'alternative dance', 'russian dance', 'edmonton indie', 'russian dance pop'],
 ];
