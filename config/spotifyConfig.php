@@ -60,6 +60,10 @@ return [
         '6n7nd5iceYpXVwcx8VPpxF', //Antonin Dvorak
         '436sYg6CZhNefQJogaXeK0', //Camille Saint-Saens
         '17hR0sYHpx7VYTMRfFUOmY', //Maurice Ravel
+        '0OzxPXyowUEQ532c9AmHUR', //Giacomo Puccini
+        '5goS0v24Fc1ydjCKQRwtjM', //Johann Strauss II
+        '1JOQXgYdQV2yfrhewqx96o', //Giuseppe Verdi
+
     ],
 
     'markets' => [
