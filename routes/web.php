@@ -47,3 +47,8 @@ Route::get('/genres', [HomeController::class, 'genres'])
 
 Route::post('/subscription', [HomeController::class, 'saveSubscriptions'])
     ->name('subscription');
+
+//TODO delete
+Route::post('/webhook', [AuthController::class, 'webhook'])
+    ->middleware('guest')
+    ->name('webhook');

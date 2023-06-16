@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\Tracker;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -66,5 +67,12 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         return redirect()->route('login');
+    }
+
+    public function webhook(Request $request)
+    {
+        Log::info('WEBHOOK', ['params' => $request->all(), 'header' => $request->header('Custom-Header')]);
+
+        return response('');
     }
 }
