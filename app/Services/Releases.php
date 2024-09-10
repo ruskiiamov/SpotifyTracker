@@ -147,6 +147,9 @@ class Releases
         $albumCacheKeys = Arr::map($albumIds, function ($value) {
             return 'album_id=' . $value;
         });
+
+        Log::info('$albumCacheKeys', ['val' => $albumCacheKeys]);
+
         $albums = Cache::many($albumCacheKeys);
         $albumsObjects = Arr::map($albums, function ($value, $key) {
             if ($value == null) {
