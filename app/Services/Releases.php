@@ -148,9 +148,7 @@ class Releases
             return 'album_id=' . $value;
         });
 
-        Log::info('$albumCacheKeys', ['val' => $albumCacheKeys]);
-
-        $albums = Cache::many($albumCacheKeys);
+        $albums = empty($albumCacheKeys) ? [] : Cache::many($albumCacheKeys);
         $albumsObjects = Arr::map($albums, function ($value, $key) {
             if ($value == null) {
                 Log::info('Album not cached: ' . $key);
